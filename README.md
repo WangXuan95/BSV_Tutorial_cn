@@ -4,9 +4,9 @@ BSV 中文教程
 
 ****
 
-# 1 前言
+# <span id="head1">1 前言</span>
 
-## 1.1 为什么要 BSV？Verilog 不好用？
+## <span id="head2">1.1 为什么要 BSV？Verilog 不好用？</span>
 BSV 是一门高级硬件描述语言（**H**igh-**L**evel **H**ardware **D**escription **L**anguage, **HL-HDL**），与 Verilog 一样，被用于 FPGA 或 ASIC 的前端设计和验证。BSV 于 2003 年被 Bluespec :tm: 开发，期间一直作为商业收费 :moneybag: 工具而存在，到 2020 年它的编译器才开源，这才给了我们接触它的机会。
 
 Verilog 的语法简单、特性少，却能全面且精准的描述绝大多数数字电路：从组合逻辑到时序逻辑，从同步时钟到跨时钟域，从流水灯到CPU。可以说 Verilog 在数字逻辑设计中的地位就像 C 语言在程序设计中的地位一样，是“小而美”的语言。学习 Verilog 时，只需要掌握3种常见写法：`assign`， `always @ (*)` 和 `always @ (posedge clk)` ，剩下的就依赖于你对电路设计的理解了。当然，这才是最难的，包括各种繁杂的硬件设计思维——同步电路、异步电路、状态机、并行展开、流水线化、握手信号、总线协议等。各位读到这里有没有意识到问题——用如此简单的抽象级别来描述如此复杂的数字电路系统，会不会很吃力？相信每个接触过复杂的 Verilog 系统的读者，都体会过被 always 块下的几十个状态所支配的恐惧，也清晰地记得模块实例化时那几十行吓人的端口连接。因此，我们需要一种抽象层次更高的 HDL 来提高开发效率，BSV 就能胜任这一工作。
@@ -14,7 +14,7 @@ Verilog 的语法简单、特性少，却能全面且精准的描述绝大多数
 > :pushpin: 在笔者看来 BSV 并不能替代 Verilog ——至少现在不能。同样，HLS、SpinalHDL、Chisel 也无法撼动 Verilog 的地位。这就像各种高级语言也没有替代 C 语言一样。一些说法把 Verilog/VHDL 在数字逻辑设计中的地位，比作汇编语言在程序设计中的地位，笔者认为该说法具有误导性。Verilog/VHDL 所在的抽象层次恰到好处，且是通用（跨平台）的——支持各厂家的FPGA和ASIC，因此成为了数字逻辑设计的主流语言，这与 C 语言的理念类似，应当比作 C 语言。
 >
 
-## 1.2 关于本教程
+## <span id="head3">1.2 关于本教程</span>
 
 在开始前，读者要有如下基础：
 
@@ -37,7 +37,7 @@ Verilog 的语法简单、特性少，却能全面且精准的描述绝大多数
 
 笔者也是 BSV 初学者，完全凭借对数字逻辑设计的热爱~~用爱发电~~编写了本教程。出现不准确的表述也在所难免，可以提 issue 让笔者改进。
 
-## 1.3 参考资料
+## <span id="head4">1.3 参考资料</span>
 
 [1] R. Nikhil and K. Czeck. BSV by Example: The next-generation language for electronic system design.  Bluespec, Inc. 2010. http://csg.csail.mit.edu/6.S078/6_S078_2012_www/resources/bsv_by_example.pdf.
 
@@ -47,15 +47,103 @@ Verilog 的语法简单、特性少，却能全面且精准的描述绝大多数
 
 
 
-## 1.4 目录 :page_with_curl:
+## <span id="head5">1.4 目录 :page_with_curl:</span>
 
-[TOC]
+- [2 BSV概览](#head6)
+	- [2.1 BSV vs. Verilog](#head7)
+	- [2.2 BSV vs. Chisel/SpinalHDL](#head8)
+	- [2.3 BSV vs. HLS](#head9)
+	- [2.4 总结](#head10)
+- [3 准备工作](#head11)
+	- [3.1 安装 bsc 编译器](#head12)
+	- [3.2 安装 iverilog 和 Tcl](#head13)
+	- [3.3 安装 gtkwave](#head14)
+	- [3.4 部署脚本 bsvbuild.sh](#head17)
+	- [3.5 找一款顺手的代码编辑器](#head18)
+- [4 项目组织与构建](#head19)
+	- [4.1 单模块项目](#head20)
+	- [4.2 单包多模块项目](#head21)
+	- [4.3 多包项目](#head22)
+	- [4.4 生成与查看波形](#head23)
+- [5 类型与变量](#head24)
+	- [5.1 类型类](#head25)
+	- [5.2 基本数据类型](#head26)
+	- [5.3 Integer 与 String 类型](#head31)
+	- [5.4 使用 $display 打印](#head34)
+	- [5.5 变量定义与赋值](#head35)
+	- [5.6 组合逻辑电路](#head39)
+	- [5.7 元组 Tuple](#head45)
+	- [5.8 Maybe 类型](#head46)
+- [6 时序逻辑电路](#head47)
+	- [6.1 寄存器 Reg](#head48)
+		- [e.g. 开平方计算流水线 v1](#head51)
+	- [6.2 读写顺序与调度注解](#head52)
+	- [6.3 线网 Wire](#head53)
+	- [6.4 规则 rule](#head59)
+	- [6.5 调度属性](#head64)
+	- [6.6 并发寄存器 mkCReg](#head75)
+- [7 模块与接口](#head76)
+	- [7.1 模块层次结构](#head77)
+	- [7.2 值方法与动作方法](#head80)
+	- [7.3 方法的隐式条件](#head84)
+	- [7.4 动作值方法](#head89)
+		- [e.g. 比特编码器 v4](#head90)
+	- [7.5 方法实现的简写](#head91)
+		- [e.g. 自增寄存器 v1](#head92)
+	- [7.6 使用现成的接口](#head93)
+		- [e.g. 自增寄存器 v2](#head94)
+	- [7.7 接口嵌套](#head95)
+		- [e.g. 可配置自增寄存器 v1](#head96)
+	- [7.8 用元组返回多个接口](#head97)
+		- [e.g. 可配置自增寄存器 v2](#head98)
+	- [7.9 动作函数](#head99)
+- [8 存储与队列](#head100)
+	- [8.1 BRAMCore](#head101)
+	- [8.2 BRAM](#head106)
+		- [e.g. 矩阵转置](#head113)
+	- [8.3 队列 FIFO 概览](#head114)
+	- [8.4 常规 FIFO](#head115)
+		- [e.g. 开平方计算流水线 v2](#head118)
+	- [8.5 不保护 FIFO](#head119)
+	- [8.6 LFIFO](#head120)
+		- [e.g. 累加式写入的存储器](#head121)
+	- [8.7 DFIFOF](#head122)
+		- [e.g. 比特编码器 v5](#head123)
+	- [8.8 BypassFIFO](#head124)
+	- [8.9 大容量的 BRAMFIFO](#head125)
+- [9 高级数据类型](#head126)
+	- [9.1 数组 array](#head127)
+	- [9.2 向量 Vector](#head129)
+	- [9.3 typedef 关键字](#head134)
+	- [9.4 枚举 enum](#head135)
+	- [9.5 结构体 struct](#head136)
+	- [9.6 标签联合体 union tagged](#head137)
+	- [9.7 case 语句与表达式](#head138)
+- [10 多态](#head142)
+	- [10.1 多态中的基本概念](#head143)
+	- [10.2 多态函数举例](#head148)
+	- [10.3 多态模块举例](#head149)
+- [11 状态机 StmtFSM](#head152)
+	- [11.1 基本的构建和使用方法](#head153)
+	- [11.2 执行结构](#head156)
+	- [11.3 分支和循环](#head164)
+	- [11.4 区别局部变量和寄存器](#head168)
+	- [11.5 举例](#head169)
+		- [e.g. SPI 发送器](#head170)
+- [12 BSV for Verilog](#head171)
+	- [12.1 输入输出信号](#head172)
+	- [12.2 删除不必要的信号](#head177)
+	- [12.3 引入缺少的 Verilog 库文件](#head180)
+- [13 样例研究](#head183)
+	- [13.1 SPIFlash 读写器](#head184)
+	- [13.2 RISC-V 流水线 CPU](#head187)
+	- [13.3 JPEG 图像压缩器](#head190)
 
 
 
-# 2 BSV概览
+# <span id="head6">2 BSV概览</span>
 
-## 2.1 BSV vs. Verilog
+## <span id="head7">2.1 BSV vs. Verilog</span>
 
 为了提升读者的学习热情:raising_hand:，我先展示一个实用样例：编写一个 **SPI 总线的发送控制器** 。虽然使用 Verilog 写起来有一点难度，但用 BSV 写起来**非常简单**！
 
@@ -200,7 +288,7 @@ module mkSPIWriter(          // 这些注释是笔者加上的
 
 
 
-## 2.2 BSV vs. Chisel/SpinalHDL
+## <span id="head8">2.2 BSV vs. Chisel/SpinalHDL</span>
 
 Chisel 和 SpinalHDL 也可以归类为高级硬件描述语言（HL-HDL）。因为笔者并没有学过它们 ，本节留待日后补充。这里摆出 BSV 官方对 Chisel 和 BSV 的比较：
 
@@ -210,7 +298,7 @@ Chisel 和 SpinalHDL 也可以归类为高级硬件描述语言（HL-HDL）。�
 
 
 
-## 2.3 BSV vs. HLS
+## <span id="head9">2.3 BSV vs. HLS</span>
 
 **BSV** 与高层次综合 (**H**igh **L**evel **S**ynthesis, **HLS**) 的理念有本质上的不同。BSV 的目标是提高电路的时钟周期级行为的描述能力，而 HLS 则试图屏蔽时序的概念，以无时序描述能力的高级语言（C/C++）为起点，靠**自动调度**来确定执行时序。虽然这让软件设计人员能够快速上手，但也让 HLS 的应用场合受限。例如，HLS 可以设计高性能的神经网络加速器，但设计 CPU 就捉襟见肘。
 
@@ -220,32 +308,32 @@ Chisel 和 SpinalHDL 也可以归类为高级硬件描述语言（HL-HDL）。�
 
 
 
-## 2.4 总结
+## <span id="head10">2.4 总结</span>
 
 **图2**比较了 Verilog, VHDL, Chisel, HLS, BSV 的抽象层次(Level of abstraction)和架构透明度(Architectural Transparent) 。架构透明度越高，语言对电路细节(微架构)的控制能力越强，生成的电路的行为也越容易被开发者掌控(可预测性高)。
 
-| ![图2](.\readme_image\2.compare.png) |
+| ![图2](./readme_image/2.compare.png) |
 | :---: |
 | **图2**：比较 Verilog, VHDL, Chisel, HLS 与 BSV |
 
 
 
-# 3 准备工作
+# <span id="head11">3 准备工作</span>
 
 本章教大家搭建 BSV 开发环境。BSV 编译器运行在 Linux 系统上，可以使用以下平台之一：
 
 * Linux 实体机 :computer:
 * Linux 虚拟机
 * Windows10 bash (**W**indows **S**ubsystem of **L**inux, **WSL**)，强烈推荐 :raised_hands: ！！WSL 的开启方法可以参考：
-  * Install WSL：https://docs.microsoft.com/en-us/windows/wsl/install
-  * win10开启wsl，让我们愉快的使用Linux：https://zhuanlan.zhihu.com/p/384026893
+* Install WSL：https://docs.microsoft.com/en-us/windows/wsl/install
+* win10开启wsl，让我们愉快的使用Linux：https://zhuanlan.zhihu.com/p/384026893
 
 
 > :point_right: 提示：开启 WSL 后，在 Windows 的某个目录（文件夹）下打开 WSL 命令行的方式是：在”文件资源管理器“空白处摁住shift+右键 → ”在此处打开 PowerShell 窗口“ → 在 PowerShell 中输入 wsl + 回车 → 即可进入 Linux 环境。
 
 
 
-## 3.1 安装 bsc 编译器
+## <span id="head12">3.1 安装 bsc 编译器</span>
 
 BSV 的编译器 bsc 是以源码的形式发布在[Bluespec官方bsc仓库](https://github.com/B-Lang-org/bsc)的，并未提供编译好的可执行文件。不过，笔者帮你们编译好了，它在本仓库的 **bsc-build.tar.gz** 压缩包中。（笔者是在 **Ubuntu 16.04 (x86_64)** 中编译它的，复制到 WSL 上发现也能工作）
 
@@ -296,7 +384,7 @@ $ bsc
 
 
 
-## 3.2 安装 iverilog 和 Tcl
+## <span id="head13">3.2 安装 iverilog 和 Tcl</span>
 
 Icarus Verilog (iverilog) 用于进行 BSV 和 Verilog 的联合仿真；tcl-dev 是为了使用 Bluespec Tcl Shell (bluetcl)。运行以下命令安装：
 
@@ -320,11 +408,11 @@ Usage: iverilog [-ESvV] [-B base] [-c cmdfile|-f cmdfile]
 
 
 
-## 3.3 安装 gtkwave
+## <span id="head14">3.3 安装 gtkwave</span>
 
 为了查看仿真产生的波形，需要安装 gtkwave。
 
-### 在 Linux 上安装 gtkwave
+### <span id="head15">在 Linux 上安装 gtkwave</span>
 
 如果使用的是 Linux 实体机或虚拟机，可以直接安装：
 
@@ -338,13 +426,13 @@ $ apt-get install gtkwave
 $ gtkwave wave.vcd     #今后用该命令查看波形文件 wave.vcd
 ```
 
-### 在 Windows 上安装 gtkwave
+### <span id="head16">在 Windows 上安装 gtkwave</span>
 
 你不能在 WSL 中安装 gtkwave，因为 gtkwave 是一个图形界面 (GUI)，而 WSL 是没有 GUI 的。替代办法就是直接在 Windows 上安装 gtkwave。请前往 [**gtkwave官网** ](http://gtkwave.sourceforge.net/)下载 ZIP 压缩包，把它解压到你想安装的文件夹下，找到其中的 `gtkwave/bin` 目录里面的 **gtkwave.exe** ，运行它，如果打开了一个窗口，则安装成功。
 
 
 
-## 3.4 部署脚本 bsvbuild.sh
+## <span id="head17">3.4 部署脚本 bsvbuild.sh</span>
 
 为了方便调用 bsc 和 iverilog 等工具进行编译、仿真、生成波形、生成 Verilog 的流程，我编写了自动脚本 **bsvbuild.sh** 。请运行以下命令把它复制到 `/opt/bsc/bin` 目录下（也就是3.1节中bsc的安装目录），并提供运行权限：
 
@@ -393,13 +481,13 @@ $ bsvbuild.sh    # 如果打印如下，说明 bsvbuild.sh 正常工作
 
 
 
-## 3.5 找一款顺手的代码编辑器
+## <span id="head18">3.5 找一款顺手的代码编辑器</span>
 
 BSV 的代码文件名后缀为 .bsv ，尽管用记事本都能编写，但没有高亮和补全写起来确实很难受。这里我推荐用 vscode ，并给他安装 BSV 的高亮插件。
 
 首先安装 vscode （过程略）。然后打开 vscode ，如**图3**操作，点击”扩展“ → 输入”bluespec“ → 找到”Bluespec System Verilog“ → 点击右侧”安装“ → 安装完成后，点击”启用“。
 
-| ![图3](.\readme_image\3.vscode_bsv.png) |
+| ![图3](./readme_image/3.vscode_bsv.png) |
 | :-----------------------------------: |
 |  **图3**：在vscode中安装BSV高亮扩展   |
 
@@ -407,11 +495,11 @@ BSV 的代码文件名后缀为 .bsv ，尽管用记事本都能编写，但没�
 
 
 
-# 4 项目组织与构建
+# <span id="head19">4 项目组织与构建</span>
 
 本章讲述 BSV 的项目组织结构；以及用命令行编译、仿真、生成波形、生成 Verilog 的方式。
 
-## 4.1 单模块项目
+## <span id="head20">4.1 单模块项目</span>
 
 BSV 项目是由**包** (package) 和**模块** (module) 来组织的。我们首先看看单包、单模块项目。打开 `src/1.Hello/Hello.bsv` 可以看到如下代码，它打印 `Hello World!` 后直接退出：
 
@@ -495,7 +583,7 @@ $ bsvbuild.sh -bs Hello.bsv
 
 
 
-## 4.2 单包多模块项目
+## <span id="head21">4.2 单包多模块项目</span>
 
 我们再看看如何组织单包、多模块项目。打开 `src/2.DecCounter/DecCounter.bsv` 。它的结构如下：
 
@@ -549,7 +637,7 @@ $ bsvbuild.sh -vs mkTb DecCounter.bsv
 
 
 
-## 4.3 多包项目
+## <span id="head22">4.3 多包项目</span>
 
 我们再看看如何组织多包、多模块项目。打开目录 `src/3.SPIWriter/` ，目录下有两个 `.bsv` 文件，每个文件内都有一个包 (package)，其中 `SPIWriter.bsv` 就包含 2.1 节中所述的 SPI 发送控制器，而 `TbSPIWriter.bsv` 中的 `mkTb` 调用了 `mkSPIWriter` 进行仿真。与单包多模块项目不同的是，调用者 `mkTb` 与被调用者 `mkSPIWriter` 不在同一个包中，因此 `TbSPIWriter.bsv` 中用如下语句引入了被调用包：
 
@@ -568,7 +656,7 @@ $ bsvbuild.sh -bs mkTb TbSPIWriter.bsv
 
 
 
-## 4.4 生成与查看波形
+## <span id="head23">4.4 生成与查看波形</span>
 
 在目录 `src/4.3.SPIWriter/` 下，运行以下命令生成 Verilog 仿真波形。
 
@@ -590,7 +678,7 @@ $ gtkwave mkTb_vw.vcd     # 只有有 GUI 的 Linux 实体机/虚拟机 能运�
 
 如果你用的是 WSL ，请在 Windows 中把 3.3 节安装的 **gtkwave.exe** 设置为 `.vcd` 文件的打开方式，操作如**图4**。这样，今后只要双击 `.vcd` 文件就能查看波形。
 
-|        ![图4](.\readme_image\4.set_vcd_as_gtkwave.png)         |
+|        ![图4](./readme_image/4.set_vcd_as_gtkwave.png)         |
 | :----------------------------------------------------------: |
 | **图4**：在 Windows 中，把 **gtkwave.exe** 设为 `.vcd` 文件的打开方式 |
 
@@ -602,7 +690,7 @@ $ gtkwave mkTb_vw.vcd     # 只有有 GUI 的 Linux 实体机/虚拟机 能运�
 4. `spi_writer$spi[2:0]` 信号包含了 `ss`, `sck` 和 `mosi`，为方便查看，双击它展开每个位 。
 5. 用左上角的放大镜 :mag: 按钮调整波形缩放。
 
-| ![图5](.\readme_image\5.gtkwave_usage.png) |
+| ![图5](./readme_image/5.gtkwave_usage.png) |
 | :--------------------------------------: |
 |      **图5**：**gtkwave** 基本用法       |
 
@@ -614,7 +702,7 @@ $ gtkwave mkTb_vw.vcd     # 只有有 GUI 的 Linux 实体机/虚拟机 能运�
 
 
 
-# 5 类型与变量
+# <span id="head24">5 类型与变量</span>
 
 类型 (type) 是编程语言对数据或资源的一个抽象，是为了提高代码可读性，并让编译器在编译期排查一些低级错误（例如计算一个IP地址的平方，虽然也可以算，但很可能是程序员粗心写出来的，因此报错）。要记住：对于 Verilog 和 BSV 这些 HDL，对任何类型的运算操作，最终都会编译成对若干比特位的数字逻辑运算。
 
@@ -636,7 +724,7 @@ SPIWriter spi_writer <- mkSPIWriter;
 
 
 
-## 5.1 类型类
+## <span id="head25">5.1 类型类</span>
 
 BSV 中的类型必须派生 (deriving) 自零个、一个或多个**类型类** (type class)。用户可以自定义类型类，但多数情况下使用预定义的类型类就够，如**表2**。
 
@@ -704,11 +792,11 @@ BSV 中常用的类型转换函数如**表3**。注意 ：如果代码中包含�
 
 
 
-## 5.2 基本数据类型
+## <span id="head26">5.2 基本数据类型</span>
 
 本节介绍 BSV 预定义的几种类型。它们都派生自 `Bits` 类型类，因此可以作为寄存器、FIFO、或存储器内的值，我们称之为**可综合数据类型**。
 
-### Bit#(n) 类型
+### <span id="head27">Bit#(n) 类型</span>
 
 `Bit#(n)` 是 n 位向量，下面语句定义了一个 8 位向量，并给他赋值为 `'h12` （即16进制的`0x12`）：
 
@@ -804,7 +892,7 @@ bit      t17= pack(t3 > t2);    // t3 > t2 ? ，要把 Bool 类型转化为 bit 
 Bool     t18= t2 > extend(t1);  // t1 先拓展为 16'h00FF，再比较大小，得到 False
 ```
 
-### UInt#(n) 类型
+### <span id="head28">UInt#(n) 类型</span>
 
 `UInt#(n)` 是 n 位的无符号数，取值范围为 `0~2^n-1` 。例如，考虑到 `2^11=2048`，所以 `UInt#(11)` 的取值范围为 `0~2047` 。`UInt#(n)` 用途很广，比如计数器变量。
 
@@ -834,7 +922,7 @@ UInt#(16) t1 = 12;
 UInt#(1)  t3 = &t1;  // 正确的逐位合并
 ```
 
-### Int#(n) 类型
+### <span id="head29">Int#(n) 类型</span>
 
 `Int#(n)` 是 n 位有符号数，取值范围为 `-2^(n-1) ~ 2^(n-1)` 。例如，考虑到 `2^10=2048`，所以 `Int#(11)` 的取值范围为 `-1024~1023` 。
 
@@ -865,7 +953,7 @@ endmodule
 
 以上代码中，有符号数和无符号数之间的互相转化方法是 `i1 = unpack(pack(u1))` ，这是一种常见的写法。
 
-### Bool 类型
+### <span id="head30">Bool 类型</span>
 
 `Bool` 类型只有两种取值：`True` 和 `False` 。
 
@@ -892,11 +980,11 @@ bit  b6 = b4 & b5;  //   按位与
 
 
 
-## 5.3 Integer 与 String 类型
+## <span id="head31">5.3 Integer 与 String 类型</span>
 
 本节介绍两种不派生自 `Bits` 类型类的类型，它们不能作为寄存器、FIFO 或存储器中的取值。
 
-### Integer 类型
+### <span id="head32">Integer 类型</span>
 
 `Integer` 类型派生自 `Arith` 类型类，是数学上的整数，是无界的，对他进行算术运算永远不会溢出，不像 `UInt#(n)` 和 `Int#(n)` 是有界的。`Integer` 可以用于仿真，也可在可综合电路中作为循环下标，比如：
 
@@ -915,7 +1003,7 @@ Reg#(int) <- mkReg(0);        // 寄存器里存放 int 类型，正确
 //Reg#(Integer) <- mkReg(0);  // 寄存器里存放 Integer 类型，错误！！
 ```
 
-### String 类型
+### <span id="head33">String 类型</span>
 
 `String` 类型表示一个字符串，一般用作仿真打印、指定仿真文件名等作用。 `String` 具有不定的长度，可以使用 `+` 拼接，比如：
 
@@ -943,7 +1031,7 @@ endrule
 
 
 
-## 5.4 使用 $display 打印
+## <span id="head34">5.4 使用 $display 打印</span>
 
 `$display` 和 `$write` 是用来进行仿真打印的系统任务（system task），它们的使用方法类似 Verilog 的 `$display` 和 `$write` 。其中 `$display` 会在结尾自动打印换行 `'\n'` ，而 `$write` 不会。
 
@@ -977,9 +1065,9 @@ $display("a=%d   b=%3d   c=%08x   d=%x   e=%b", a, b, c, d, e );
 
 
 
-## 5.5 变量定义与赋值
+## <span id="head35">5.5 变量定义与赋值</span>
 
-### 变量定义
+### <span id="head36"> 变量定义</span>
 
 变量定义的格式是： 
 
@@ -1006,7 +1094,7 @@ UInt#(6) value = 42;
 value = 53;
 ```
 
-### 值赋值 = 与副作用赋值 <-
+### <span id="head37">值赋值 = 与副作用赋值 <-</span>
 
 BSV 有两种赋值符号：
 
@@ -1014,9 +1102,9 @@ BSV 有两种赋值符号：
 
 - 副作用赋值 (`<-`) ：右值会引起副作用，包括实例化了一个硬件实体、或引起了硬件状态（寄存器、触发器）的变化。例如：
 
-  - 实例化了一个模块并用 `<-` 获得其接口；
+- 实例化了一个模块并用 `<-` 获得其接口；
 
-  - 调用一个动作值方法 (ActionValue method) 并用  `<-` 获得其返回值（后续7.4节会细讲）。
+- 调用一个动作值方法 (ActionValue method) 并用  `<-` 获得其返回值（后续7.4节会细讲）。
 
 在 5.2 节的各种例子里，我们一直用的是值赋值 (`=`) ，因为它仅仅是把表达式的值赋给了左值，没有实例化硬件实体，也没有引起硬件状态变化。
 
@@ -1061,7 +1149,7 @@ ra = 5,  rb = 5,  rc = 10
 
 >  :pushpin: 注意：寄存器更新语句 `ra <= ra + 1` 中用到了写入符号 (`<=`)，该符号不是赋值符号，是寄存器写入方法 `ra._write(ra + 1)` 的简写（后续5.1节会细讲），要与 `=` 和 `<-` 区分开。
 
-### let 语句
+### <span id="head38">let 语句</span>
 
 在定义变量并赋初始值时，如果右值的类型可以被编译器推断出来，则左值的类型名可以省略，用 `let` 关键字代替。举例：
 
@@ -1108,7 +1196,7 @@ endmodule
 
 
 
-## 5.6 组合逻辑电路
+## <span id="head39">5.6 组合逻辑电路</span>
 
 有了上述变量定义、赋值、运算的知识，你已经能写出组合逻辑电路了！众所周知，在 C/C++、Java、Python 等计算机编程语言中，定义的变量会对应一片内存空间（比如C语言的全局变量放在 BSS 段、局部变量放在栈空间）。不同于它们，BSV 中定义的变量永远不会占用存储空间（比如寄存器、存储器），只代表一个编译时的符号；或者代表电线中的一个节点。因此，用变量和表达式可以组成组合逻辑电路。
 
@@ -1151,7 +1239,7 @@ end
 
 目录 `src/4.GrayCode/` 里有五个 .bsv 文件，分别展示了 BSV 中五种实现组合逻辑电路的方法。
 
-### 写法1：写在规则内（没用循环）
+### <span id="head40"> 写法1：写在规则内（没用循环）</span>
 
 首先打开`GrayCode_v1.bsv` ，如下，它把组合逻辑表达式写在**规则**（rule）内，这样，获得的结果（`cnt_gray` 和 `cnt_bin` 变量）的作用域就仅限于该规则，不像上述 Verilog 代码那样，`reg [5:0] bin` 的作用域是整个模块。限制变量作用域有利于提高可读性！
 
@@ -1197,7 +1285,7 @@ cnt=000110   cnt_gray=000101   cnt_bin=000110
 cnt=000111   cnt_gray=000100   cnt_bin=000111
 ```
 
-### 写法2：写在规则内
+### <span id="head41"> 写法2：写在规则内</span>
 
 打开 `GrayCode_v2.bsv` ，看到它与写法1的不同是：把格雷码转二进制码中的重复性高的五行写成了 `for` 循环。这个 `for` 循环可综合，且不代表任何时序行为，编译器会把它**全展开**（unroll）成纯组合逻辑电路。这样的好处是提高了可读性。（实际上 Verilog 的 `always` 块里也能写 `for` 循环）：
 
@@ -1214,7 +1302,7 @@ for(int i=4; i>=0; i=i-1)
 //cnt_bin[0] = cnt_gray[0] ^ cnt_bin[1];
 ```
 
-### 写法3：写在模块内
+### <span id="head42"> 写法3：写在模块内</span>
 
 打开 `GrayCode_v3.bsv` ，看到它与写法2的不同是：把相关的变量定义和计算都移动到了规则外，但仍然在模块内，形如：
 
@@ -1238,7 +1326,7 @@ module mkTb ();
 
 用写法3，`cnt_gray` 和 `cnt_bin` 变量的作用域就是整个模块，本模块的任何规则都能访问组合逻辑电路的结果。这种作用域与 Verilog 类似——所有 `wire` 都是全局的，模块内的任何 `always` 块都能访问。
 
-### 写法4：写成函数，写在模块内
+### <span id="head43"> 写法4：写成函数，写在模块内</span>
 
 打开 `GrayCode_v4.bsv` ，看到它把二进制码转格雷码、格雷码转二进制码写成了**函数** (function) ：
 
@@ -1274,7 +1362,7 @@ module mkTb ();
 
 函数可以单次定义，多次调用。对于常用、普适的组合逻辑电路，推荐用函数！
 
-### 写法5：写成函数，写在模块外
+### <span id="head44"> 写法5：写成函数，写在模块外</span>
 
 打开 `GrayCode_v5.bsv` ，与写法4唯一的不同是，它把两个函数定义在了模块外。这样，它们就不再属于某个模块，而是属于整个包，能被包内的所有模块调用。另外，其它包（文件）也可以用引入语句：
 
@@ -1288,7 +1376,7 @@ import GrayCode_v5::*;
 
 
 
-## 5.7 元组 Tuple
+## <span id="head45">5.7 元组 Tuple</span>
 
 元组相关的代码见 `src/5.TupleTest/TupleTest.bsv` 
 
@@ -1346,7 +1434,7 @@ match {.b8, .b5} = tsplit;                        // 得到 b8='b10111001   b5=0
 
 
 
-## 5.8 Maybe 类型
+## <span id="head46">5.8 Maybe 类型</span>
 
 `Maybe#(td)` 是 BSV 预定义的一种多态类型，他能给任意类型（设类型名为 `td`）的数据附加上“是否有效”的信息。
 
@@ -1360,12 +1448,12 @@ Maybe#(Int#(9)) value2 = tagged Valid 42;   // 有效，取值为 42
 BSV 针对 `Maybe#(td)` 类型提供了两个函数：
 
 - `isValid(x)` :  接受 `Maybe#(td)` 类型的变量 `x` 作为参数：
-  - `x` 无效则返回 False 
-  - `x` 有效则返回 True
+- `x` 无效则返回 False 
+- `x` 有效则返回 True
 
 - `fromMaybe(dv, x)` :  接受 `td` 类型的变量 `dv` 和 `Maybe#(td)` 类型的变量 `x` 作为参数：
-  - `x` 无效则返回 `dv` 
-  - `x` 有效则返回 `x` 中的取值。
+- `x` 无效则返回 `dv` 
+- `x` 有效则返回 `x` 中的取值。
 
 
 使用例：
@@ -1381,17 +1469,17 @@ let d2 = fromMaybe(-99, value2);    // 得到 d2 是 Int#(9) 类型的 42
 
 
 
-# 6 时序逻辑电路
+# <span id="head47">6 时序逻辑电路</span>
 
 本章我们会学习时序逻辑电路的描述方法，包括两类重要的模块：寄存器 `Reg` 、线网 `Wire` ；以及 BSV 的重要概念—— 规则 (rule) 及其调度机制和属性。
 
-## 6.1 寄存器 Reg
+## <span id="head48">6.1 寄存器 Reg</span>
 
 寄存器是一类用于保存数据（或者叫保存电路状态）的模块。本节涉及：
 
 - 接口`Reg#()` 以及其配套的模块 `mkReg` 、 `mkRegU` 、 `mkDReg` 
 
-### mkReg 和 mkRegU
+### <span id="head49">mkReg 和 mkRegU</span>
 
 `mkReg` 和 `mkRegU` 都是模块名，用来实例化寄存器，唯一的区别是 `mkRegU` 的初始值未知（dont-care，可能是0或1），转化成 Verilog 后，你会发现 `mkReg` 定义的寄存器会在同步复位信号 `RST_N` 的控制下恢复默认值，而 `mkRegU` 不会。
 
@@ -1404,7 +1492,7 @@ Reg#(int) y <= mkRegU;     //初值未知
 
 根据左值的类型 `Reg#(int)` ，编译器得知该寄存器中存储的数据的类型是 `int` ，那么被实例化的寄存器位宽显然就是 32 位。
 
- `Reg#(int)` 是一个**接口** (interface) 的类型名，`int` 可以换成其它任何类型，因此 `Reg#()` 是个多态接口，其定义为：
+`Reg#(int)` 是一个**接口** (interface) 的类型名，`int` 可以换成其它任何类型，因此 `Reg#()` 是个多态接口，其定义为：
 
 ```verilog
 interface Reg#(type td);         // 寄存器中存储的数据的类型名为 td ，可能是任何类型
@@ -1455,7 +1543,7 @@ x=         25
 
 第一行打印的是 `x=23` ，考虑到寄存器的初始值是 `23` ，说明打印的是当前时钟周期的旧值，而不是执行 `x<=x+1` 后的新值。这也符合同步时序逻辑的行为——时钟上升沿时，只能采样到寄存器的旧值；对于当前上升沿写入寄存器的值，等到下个时钟上升沿才能采到。
 
-### mkDReg
+### <span id="head50"> mkDReg</span>
 
 BSV 还提供了一种实用的寄存器模块 `mkDReg` ，它和 `mkReg` / `mkRegU` 具有相同的接口 `Reg#(type td)` 。区别是 `mkDReg` 只在写入后的下一个周期读出写入的值，其余周期都会读出默认值。也就是说： `mkDReg` 只能保留一周期的写入结果。
 
@@ -1509,7 +1597,7 @@ cnt=10    reg1=-9    reg2=-9
 
 `mkDReg` 在刚性流水线向后传递时非常有用。你当然可以用 `mkReg` 配合一些规则来实现 `mkDReg` 相同的效果，但在合适的地方用 `mkDReg` 可以降低代码量。后续我们会看到，BSV 提供了大量类似于此的常用模块库。
 
-### e.g. 开平方计算流水线 v1
+### <span id="head51">e.g. 开平方计算流水线 v1</span>
 
 本例子用 `mkDReg` 构成一个 16 级**刚性流水线**电路，用来计算 `UInt#(32)` 类型的开平方 (sqrt)。
 
@@ -1601,7 +1689,7 @@ Reg#( Tuple2#(UInt#(32), UInt#(32)) ) dregs [17];   // 这是一个寄存器接�
 
 
 
-## 6.2 读写顺序与调度注解
+## <span id="head52">6.2 读写顺序与调度注解</span>
 
 熟悉 Verilog 的读者应该知道，寄存器每周期只能写入一个值，但能在任何地方被读取，且读到的值永远是上一周期写入的旧值。为了保证能读到旧值，我们说，在同一个时钟周期内，**在逻辑上**，寄存器的 `_read` 方法必须先于 `_write` 方法执行。
 
@@ -1730,7 +1818,7 @@ test2
 
 
 
-## 6.3 线网 Wire
+## <span id="head53">6.3 线网 Wire</span>
 
 线网 Wire 是一类用于在规则 (rule) 之间瞬时传递数据的模块，这里的瞬时是指在当前周期内。
 
@@ -1742,7 +1830,7 @@ Wire 包括以下几种接口和模块：
 
 > :pushpin: 在 Verilog 里，wire 用来放置组合逻辑电路的结果。但 BSV 里有更简单的描述组合逻辑电路的方法，即 5.6节讲过的定义变量并赋值，或者用函数。而 Wire 虽然也可以用来构建组合逻辑，但不是必要的。
 
-### mkDWire
+### <span id="head54"> mkDWire</span>
 
 `Wire#(type td)` 的接口定义如下，具有一个写方法 `_write` 和一个读方法 `_read` 。
 
@@ -1817,11 +1905,11 @@ cnt= 4   w1= 4   r1= 2
 - _write **SBR** _read：也就是上一条调度注解反过来。
 - _write **C** _write： 代表两次 `_write` 不能在同一周期执行，且不能放在规则内 。
 
-### mkWire
+### <span id="head55"> mkWire</span>
 
 学习 `mkWire` 时，我们将第一次接触方法的**隐式条件**的概念。
 
- `mkWire` 的 `_read` 方法被添加了**隐式条件**：
+`mkWire` 的 `_read` 方法被添加了**隐式条件**：
 
 - 当本周期进行了 `_write` 时，`_read` 的**隐式条件**满足，才能执行 `_read` 方法读出该值。
 - 当本周期没有进行 `_write` 时，`_read` 的**隐式条件**不满足，会阻止 `_read` 所在的规则的激活。
@@ -1872,11 +1960,11 @@ cnt=8  test1
 
 可以看出，只有在 `test1` 执行的周期，`w1._read` 的隐式条件才能满足；只有在 `test2` 执行的周期，`w2._read` 的隐式条件才能满足。考虑到 `show` 同时调用了 `w1._read` 和 `w2._read` ，所以 `show` 只会在 `test1` 和 `test2` 同时执行的周期激活。
 
-### mkBypassWire
+### <span id="head56"> mkBypassWire</span>
 
 `mkBypassWire` 与 `mkWire` 行为相同，唯一的区别是它要求每周期都被 `_write` ，一旦编译器分析出它不是每周期都 `_write` 的就报错。因此 `mkBypassWire` 的 `_read` 方法是没有隐式条件的。
 
-### mkRWire
+### <span id="head57"> mkRWire</span>
 
 `mkRWire` 是功能最全的 `Wire` （但是用起来略显复杂），具有以下接口定义：
 
@@ -1918,7 +2006,7 @@ int data = fromMaybe(<无效值>, mbi); // 如果有效，得到 data = 写入�
 | **wget** | **CF**  | **SAR** |
 | **wset** | **SBR** | **C**   |
 
-### mkPulseWire
+### <span id="head58"> mkPulseWire</span>
 
 `mkPulseWire` 是不带数据的 `RWire`，只用来传递是否有效的信号，其接口定义如下：
 
@@ -1940,7 +2028,7 @@ endinterface
 | **\_read**  | **CF**  | **SAR** |
 | **send**    | **SBR** | **C**   |
 
- `mkRWire`  和 `mkPulseWire` 举例如下：
+`mkRWire`  和 `mkPulseWire` 举例如下：
 
 ```verilog
 // 代码路径：src/7.WireTest/TestRWire.bsv
@@ -1984,7 +2072,7 @@ cnt=6   w1_v=1   w1_d=6   w2_v=1
 
 
 
-## 6.4 规则 rule
+## <span id="head59">6.4 规则 rule</span>
 
 规则的格式是：
 
@@ -2020,7 +2108,7 @@ endrule
 
 注意：无论具有怎样的条件，单个时钟周期内每个规则最多只能激活一次。
 
-### 规则的瞬时性和原子性
+### <span id="head60"> 规则的瞬时性和原子性</span>
 
 规则具有 **瞬时性**、**原子性** 。
 
@@ -2034,7 +2122,7 @@ endrule
 
 规则还有**原子性**：如果规则激活，则规则内的所有语句都执行。如果规则不激活，则整个规则的所有语句都不执行。不存在一部分语句执行，另一部分不执行的情况。
 
-### 规则内的执行顺序
+### <span id="head61"> 规则内的执行顺序</span>
 
 我们回顾一下 6.1 节中讲过的六种**调度注解**，也就是**表11**，请把该表背下来，因为它对理解模块的行为、分析规则的逻辑执行顺序非常重要。将来你在查阅 BSV 相关的模块库的文档 [2] 时，还会经常看到这些调度注解。
 
@@ -2073,7 +2161,7 @@ endrule
 
 而软件思维惯性下的**错误**的结论是按照代码排列顺序：读 `y` → 写 `x` →读 `x` →写 `y` 。这样起到的效果也就不是交换了。
 
-### 规则间的执行顺序
+### <span id="head62"> 规则间的执行顺序</span>
 
 对于同一个时钟周期内激活的多个规则，尽管合起来看也是在当前时钟周期瞬时执行的，但存在一个额外的约束：多个规则之间**在逻辑上是顺序执行**的！简称为**规则间顺序执行约束** 。换言之，一个规则内的所有语句、方法都执行完后，才能执行下一个规则。
 
@@ -2140,7 +2228,7 @@ r1
 
 > :pushpin: 与 BSV 的规则之间的顺序执行不同，Verilog 的多个 `always @ (posedge clk)` 块之间在逻辑上是并发的（如果都使用非阻塞赋值 `<=` ），相当于把它们合并成一个大 `always` 块。所以并不能把规则当作 `always @ (posedge clk)`  。尽管 BSV 的这种机制可能让初学者不习惯，但熟悉后就会发现，它方便了我们组织和分析一个时钟周期内的逻辑行为。
 
-### 规则间的冲突
+### <span id="head63"> 规则间的冲突</span>
 
 同一个时钟周期内激活的多个规则之间可能发生冲突，原因则是无法满足方法之间的调度注解，我们把冲突分为两类：
 
@@ -2193,7 +2281,7 @@ Warning: "Test1.bsv", line 20, column 9: (G0021)
 
 
 
-## 6.5 调度属性
+## <span id="head64">6.5 调度属性</span>
 
 一些**属性**（Attribute）可以指导编译器如何分析冲突、处理冲突。包括：
 
@@ -2207,7 +2295,7 @@ Warning: "Test1.bsv", line 20, column 9: (G0021)
 - 可以写在模块上面（即 `module` 关键字的前面），此时它可以引用该模块的任何规则。
 - 可以放在规则定义上面（即 `rule` 关键字的前面），此时它可以直接引用该规则或同一级别的任何其他规则。
 
-### descending_urgency
+### <span id="head65"> descending_urgency</span>
 
 `descending_urgency` 允许用户指定规则间的**紧急程度** (urgency) ，在发生冲突时，紧急的规则抑制不紧急的规则的激活 。
 
@@ -2275,7 +2363,7 @@ cnt=6  x=3  y=2
 
 看到这里你可能会疑惑： `descending_urgency`  这玩意好像没啥用啊？既然它能控制 `x2y` 永远都不会执行，我直接删掉 `x2y` 不就行？实际上以上例子确实很傻，因为 `y2x` 没有显式或隐式条件，永远每周期都会执行，而  `descending_urgency` 真正有用的地方是在规则具有条件时。
 
-### 用显式条件影响冲突的发生
+### <span id="head66"> 用显式条件影响冲突的发生</span>
 
 具有**显式条件**和**隐式条件**的规则会影响冲突的发生。比如我们给规则 `y2x` 加一个显式条件：
 
@@ -2318,7 +2406,7 @@ cnt=5  x=3  y=4
 cnt=6  x=3  y=4
 ```
 
-### 用隐式条件影响冲突的发生
+### <span id="head67"> 用隐式条件影响冲突的发生</span>
 
 6.3 节学过， `mkWire` 的 `_read` 方法具有隐式条件——只在本周期调用了 `_write` 的情况下满足。我们给规则 `y2x` 构造一个隐式条件：
 
@@ -2369,7 +2457,7 @@ cnt=6  x=4  y=5
 - 在前2个周期，`x<=y+1;` 被执行，这是因为规则 `y2x` 隐式条件 `w1._read` 被满足，且 `y2x` 紧急程度高于 `x2y` ，所以激活 `y2x` 而不是 `x2y` 。
 - 在 cnt>=2 的周期，`y<=x+1;` 被执行，这是因为隐式条件 `w1._read` 不再满足，无法激活 `y2x` ，转而激活与之冲突的 `x2y` 。
 
-### 不能用 if 语句影响冲突的判断
+### <span id="head68">不能用 if 语句影响冲突的判断</span>
 
 注意 BSV 只能用显式/隐式条件来影响冲突的发生，无法根据 if 语句的真假来判断是否发生冲突，这是因为规则内的 if 条件不会参与规则的激活条件的判断。
 
@@ -2410,7 +2498,7 @@ Warning: "Test5.bsv", line 16, column 9: (G0021)
 
 之所以 `x2y` 永远不会运行，是因为 `y2x` 不具有任何显式和隐式条件，编译器认为 `x<=y+1;`  和 `y<=x+1;` 每周期都会发生**排序冲突**，所以让 `y2x` 每周期都抑制 `x2y` 的激活，而无法产生像 `Test2.bsv` 那样的调度。
 
-### mutually_exclusive
+### <span id="head69"> mutually_exclusive</span>
 
 如果说 `descending_urgency` 是用来指导编译器“冲突发生时该怎么做”，那么 `mutually_exclusive` 和 `conflict_free` 就用来指导编译器“冲突会不会发生”。
 
@@ -2472,9 +2560,9 @@ Warning: "MutuallyExclusive.bsv", line 3, column 8: (G0010)
 
 所幸，BSV 编译器会用运行时 Error 来帮助我们尽量排查出这种分析错误的情况。使用 `mutually_exclusive` 时，在仿真时如果检测到 这些规则在同时钟周期激活，就打印 Error（这种打印不会产生电路开销）。注意：这种 Error 是仿真运行时打印的。不过，仿真时不打印 Error 不代表就万事大吉了，因为仿真并不一定覆盖所有情况。最终还是要依赖用户的手工分析来确定两个规则是否真的互斥。
 
-### conflict_free
+### <span id="head70"> conflict_free</span>
 
- `mutually_exclusive` 具有局限性：有时候多个规则可能同时激活，但它们中的引起冲突的语句并不会同时执行。如何理解这种情况呢？看看以下例子：
+`mutually_exclusive` 具有局限性：有时候多个规则可能同时激活，但它们中的引起冲突的语句并不会同时执行。如何理解这种情况呢？看看以下例子：
 
 ```verilog
 // 代码路径：src/10.RuleNoConflict/ConflictFree.bsv (部分)
@@ -2624,7 +2712,7 @@ x=3  y=5  z=10
 x=2  y=6  z=12
 ```
 
-### preempts
+### <span id="head71"> preempts</span>
 
 `preempts` （抢占）属性给两个规则强制加上冲突（即使他们并不冲突），同时指定紧急程度。
 
@@ -2711,7 +2799,7 @@ cnt=9  x=3  y=5  z=3
 
 `preempts` 可以用来在隐式条件不满足时干一些事情，比如第 8 章学 FIFO 后，我们可以用 `preempts`  实现向多个 FIFO 中压入数据，如果要求每周期只有一项数据可以压入，就可以用 `preempts` 来实现固定优先级调度。
 
-### fire_when_enabled
+### <span id="head72"> fire_when_enabled</span>
 
 `fire_when_enabled` 属性用于断言：当某个规则的显式和隐式条件为真时，该规则必须被触发。也就是说，`fire_when_enabled` 检查一个规则是否因为与其他规则有冲突，且紧急程度较低，而导致在本来该激活（显式和隐式条件都满足）时被抑制了激活。
 
@@ -2752,7 +2840,7 @@ Error: "test.bsv", line 16, column 9: (G0005)
 
 - 如果把紧急顺序改成 `(* descending_urgency = "test1, test2" *)` ，那么 `test1` 的激活永远不会被 `test2` 抑制。
 
-### no_implicit_conditions
+### <span id="head73"> no_implicit_conditions</span>
 
 `no_implicit_conditions` 属性用于断言：一个规则中所有的方法不含隐式条件。
 
@@ -2765,9 +2853,9 @@ Error: "test.bsv", line 16, column 9: (G0005)
 
 因为隐式条件比较隐蔽，编码时不易发现，在我们不希望一个规则含有隐式条件时，可以用这个断言来避免后续添加更多的代码引入了隐式条件，导致“阴沟里翻船”。
 
-### 调度：总结
+### <span id="head74"> 调度：总结</span>
 
- 6.4 和 6.5 节的内容比较晦涩，也不太符合熟悉 Verilog 的开发者的习惯，需要适应，现将几个知识点总结如下。不理解的地方可以倒回去再看。
+6.4 和 6.5 节的内容比较晦涩，也不太符合熟悉 Verilog 的开发者的习惯，需要适应，现将几个知识点总结如下。不理解的地方可以倒回去再看。
 
 **调度注解**：规定了同一个模块实例的多个方法之间必须满足的关系和逻辑执行顺序。包括 **CF** 、 **SB** 、 **SA** 、 **SBR** 、 **SAR** 、 **C** ，相关的**表11**需要背下来。这些调度注解决定了模块的行为。
 
@@ -2796,7 +2884,7 @@ Error: "test.bsv", line 16, column 9: (G0005)
 
 
 
-## 6.6 并发寄存器 mkCReg
+## <span id="head75">6.6 并发寄存器 mkCReg</span>
 
 本章的最后介绍一种略显复杂，但又很实用的模块 —— `mkCReg`。
 
@@ -2807,7 +2895,7 @@ Reg#(int) creg [3] <- mkCReg(3, 0); // Reg#(int) creg [3] 代表接口数组，�
                                     // mkCReg 的参数中，3 代表 3 个接口， 0代表寄存器的初始值是0
 ```
 
- `creg[0]`，`creg[1]`，`creg[2]` 代表该寄存器的第一个、第二个、第三个接口。在同一个时钟周期内，`creg` 行为如下：
+`creg[0]`，`creg[1]`，`creg[2]` 代表该寄存器的第一个、第二个、第三个接口。在同一个时钟周期内，`creg` 行为如下：
 
 - `creg[0]._read` 可以获得上个周期存放在 `creg`  中的值；
 - 如果执行了 `creg[0]._write(v1)` ，则本周期可以立即从 `creg[1]._read` 上读到新值 `v1` ，否侧 `creg[1]._read` 获得和 `creg[0]._read` 一样的值。
@@ -2950,11 +3038,11 @@ cnt=33    creg=11
 
 
 
-# 7 模块与接口
+# <span id="head76">7 模块与接口</span>
 
 模块 (module) 允许我们将大型的项目拆分成功能上、逻辑上独立的模块，提高项目的可读性、可维护性、可复用性。而接口 (interface) 和其中的方法 (method) 是一个模块调用另一个模块的方式。
 
-## 7.1 模块层次结构
+## <span id="head77">7.1 模块层次结构</span>
 
 有必要区分以下概念：
 
@@ -2968,11 +3056,11 @@ cnt=33    creg=11
 - 尽管 `mkM3` 的接口是 Empty ，但它仍然能被 `mkTop` 实例化。
 - 顶层模块名是 `mkTop` ，但是没有任何模块调用它。当进行仿真时，用命令 `bsvbuild.sh -bs mkTop mkTop.bsv` 相当于指定了 `mkTop` 作为顶层模块，那么它在仿真中的实例名就是默认的 `Top` 
 
-| ![图6](.\readme_image\6.module_hierarchy.png) |
+| ![图6](./readme_image/6.module_hierarchy.png) |
 | :-----------------------------------------: |
 |          **图6**：模块层次结构举例          |
 
-### 接口定义语法
+### <span id="head78"> 接口定义语法</span>
 
 接口定义的语法是：
 
@@ -2991,7 +3079,7 @@ endmodule
 - **动作方法 (Action method) **：接受一个或多个变量作为参数，会改变调用模块内的状态。一般用于给模块输入数据（input）。
 - **动作值方法 (ActionValue method)** ：接受一个或多个变量作为参数，会改变调用模块内的状态，也会返回一个变量。
 
-### 模块定义语法
+### <span id="head79"> 模块定义语法</span>
 
 模块定义的语法是：
 
@@ -3038,11 +3126,11 @@ Ifc_Name instance_name <- mkModuleName(10);
 
 
 
-## 7.2 值方法与动作方法
+## <span id="head80">7.2 值方法与动作方法</span>
 
 本节介绍**值方法**和**动作方法**的定义和调用方式。
 
-### 值方法
+### <span id="head81"> 值方法</span>
 
 **值方法** (Value method) 能让调用者从被调用模块中获取数据。例如，寄存器的 `_read` 就是值方法。
 
@@ -3050,7 +3138,7 @@ Ifc_Name instance_name <- mkModuleName(10);
 
 值方法可以有隐式条件，如果隐式条件不满足，则调用它的规则不激活。
 
-### 动作方法
+### <span id="head82"> 动作方法</span>
 
 **动作方法** (Action method) 能让调用者通过参数把数据给被调用模块（也可以没有参数）。例如，寄存器的 `_write` 就是动作方法。动作方法不会返回数据给调用者。
 
@@ -3099,16 +3187,16 @@ endmethod
 
 
 
-### e.g. 比特编码器 v1
+### <span id="head83">e.g. 比特编码器 v1</span>
 
 除了语法讲解外，笔者将用一个实用例子贯穿 7 、8 章 —— 编写一个**比特编码器**。比特编码器是无损编码，产生的输出码能无歧义地恢复为输入码。主要用来压缩一个频繁取较小值的数据流。它的功能要求如下：
 
 - **输入码**：每周期可输入 8bit 数据 din ，或者也可以选择不输入（空闲）。
 - 计算**长度码**：寻找 din 左起第一个 =1 的 bit ，用该 bit 所在的下标作为长度码 len。存在一种特例：
-  - 当 din=8'h0 时，len=3'd0
+- 当 din=8'h0 时，len=3'd0
 - 计算**数据码**：取输入数据的低 len 个 bit 作为数据码 trim 。存在两种特例：
-  - 当 din=8'h0 时，trim=1'b0 
-  - 当 din=8'h1 时，trim=1'b1
+- 当 din=8'h0 时，trim=1'b0 
+- 当 din=8'h1 时，trim=1'b1
 - 拼接**生成码**：令 trim 在高位，len 在低位，进行拼接，得到生成码 code
 - 更新**遗留码**，产生**输出数据**：把 code 拼接在上一周期的遗留码 drem 上，拼接后如果长度 >=16 ，就把低 16bit 作为输出码 dout 输出，drem 则删去这低 16bit 。
 
@@ -3248,13 +3336,13 @@ endmodule
 
 
 
-## 7.3 方法的隐式条件
+## <span id="head84">7.3 方法的隐式条件</span>
 
-### 值方法的隐式条件
+### <span id="head85"> 值方法的隐式条件</span>
 
 可以给方法加上隐式条件，让调用它的规则在隐式条件不满足时不能激活。
 
-### e.g. 比特编码器 v2
+### <span id="head86">e.g. 比特编码器 v2</span>
 
 在**比特编码器**的例子中，显然我们可以把 `get_valid` 方法作为 `get` 方法的隐式条件，这样还可以省略 `get_valid` 方法。我们在接口定义中删掉 `get_valid` 方法的定义。然后把 `mkBitCoder` 中的 `get` 方法实现改成如下。
 
@@ -3284,7 +3372,7 @@ endmodule
 
 方法的隐式条件还会随着调用层次而传递——如果一个方法的实现中调用了一个具有隐式条件的方法，则该隐式条件也会成为该方法的隐式条件。
 
-### 动作方法的隐式条件
+### <span id="head87"> 动作方法的隐式条件</span>
 
 动作方法 (Action Method) 也可以有隐式条件，格式如下：
 
@@ -3294,7 +3382,7 @@ endmodule
    endmethod
 ```
 
-### e.g. 比特编码器 v3
+### <span id="head88">e.g. 比特编码器 v3</span>
 
 **比特编码器**的动作方法 put 目前还没有添加隐式条件的动机，因为显然 `mkBitCoder`  内部没有拒绝一个新输入的 din 的理由，如果强行构造一个隐式条件来举例那也太傻了。为此，~~甲方爸爸~~稍稍修改功能要求，要求输出码 dout 从 16bit 改成了 8bit 。在这种情况下， 考虑到 code 的宽度可能大于 8bit ，可能导致 drem 越堆积越多，最终溢出可承载的量（我们设计的承载量是 31bit）。为此，我们可以给 put 方法加上隐式条件，隐式条件不满足代表 “drem 要溢出了，不要再输入了” 。这种机制叫做**反压** (back-pressure) ——流水线后级因为一些原因，阻止前级继续向后传递数据。
 
@@ -3347,7 +3435,7 @@ put--->| 如果put，最多产生10bit  |------------->| 当前含有 drem_len �
 
 
 
-## 7.4 动作值方法
+## <span id="head89">7.4 动作值方法</span>
 
 **动作值方法** (ActionValue Method) 既允许向模块传入参数作为数据（也可以不带参数）、修改被调用模块的状态，又允许获取模块内的状态/数据。
 
@@ -3371,7 +3459,7 @@ put--->| 如果put，最多产生10bit  |------------->| 当前含有 drem_len �
 
 **动作值方法**可以认为是一个**动作方法**和一个**值方法**的组合，但是一旦封装成一个动作值方法，就意味着二者变成了原子操作，无法在不执行动作时获取返回值。因此，动作值方法固然能简化代码，但需要考虑好是否需要在一些情况下不执行动作，只想得到返回值，如果有，就不要定义动作值方法，而是用一个动作方法和一个值方法代替。（第 8 章中我们会看到， FIFO 的 deq 方法 和 first 方法不合成一个动作值方法，就是因为有这种考量）。
 
-### e.g. 比特编码器 v4
+### <span id="head90">e.g. 比特编码器 v4</span>
 
 下面，为了让动作值方法有意义，~~甲方爸爸~~再次修改比特编码器的功能要求：调用者不再随时能接受 `get` 方法输出的 dout，而是要在不能接受 dout 时，数据能积压在模块内，等下次调用 `get` 时才拿出积压的数据。我们发现，这又构成了另一个**反压** (back-pressure) 因素——**输出反压**：如果不积极地调用 `get` 方法，那么由于数据积压，流水线前级不再能向后传递。
 
@@ -3475,7 +3563,7 @@ endmodule
 
 
 
-## 7.5 方法实现的简写
+## <span id="head91">7.5 方法实现的简写</span>
 
 第 7.5 \~ 7.8 节讲解如何优雅地定义接口和实现方法。
 
@@ -3500,7 +3588,7 @@ method Action methodA(int x);   // 不是简写
 endmethod
 ```
 
-### e.g. 自增寄存器 v1
+### <span id="head92">e.g. 自增寄存器 v1</span>
 
 举个例子，我们编写一种自增寄存器 `mkIncreaseReg` ：
 
@@ -3550,11 +3638,11 @@ endmodule
 
 
 
-## 7.6 使用现成的接口
+## <span id="head93">7.6 使用现成的接口</span>
 
 自定义模块时，没必要对每个模块都新定义一个接口，在接口方法类似，且不影响人理解的情况下，可以重用 BSV 预定义的接口，例如我们已经学过的 `Reg#(type a)` 和 `Wire#(type a)` 接口。
 
-### e.g. 自增寄存器 v2
+### <span id="head94">e.g. 自增寄存器 v2</span>
 
 对于上一节的自增寄存器 `mkIncreaseReg` ，因为读写行为和 BSV 预定义的接口 `Reg#(int)` 类似，所以我们没必要新定义接口类型 `IncreaseReg` ，而是直接借用 `Reg#(int) ` 作为它的接口。
 
@@ -3607,11 +3695,11 @@ endmodule
 
 
 
-## 7.7 接口嵌套
+## <span id="head95">7.7 接口嵌套</span>
 
 接口的定义里可以嵌套其它接口。
 
-### e.g. 可配置自增寄存器 v1
+### <span id="head96">e.g. 可配置自增寄存器 v1</span>
 
 例如，编写一个可配置自增步数的自增寄存器 `mkIncreaseRegCfg` ，要求它具有两个寄存器接口：
 
@@ -3629,7 +3717,7 @@ interface IncreaseRegCfg;
 endinterface
 ```
 
- `mkIncreaseRegCfg`  实现如下：
+`mkIncreaseRegCfg`  实现如下：
 
 ```verilog
 // 代码路径：src/14.IncreaseReg/IncreaseRegCfg_v1.bsv （部分）
@@ -3669,7 +3757,7 @@ endmodule
 
 
 
-## 7.8 用元组返回多个接口
+## <span id="head97">7.8 用元组返回多个接口</span>
 
 上一节中，为了让 `mkIncreaseRegCfg`  具有两个 `Reg#(int)` 接口，我们定义了新的嵌套接口 `IncreaseRegCfg` 。那么有没有办法不定义新的接口，来让一个模块具有多个现成的接口的组合呢？有！你可以用复合数据类型，比如接口数组、接口结构体、接口元组：
 
@@ -3678,7 +3766,7 @@ endmodule
 
 - **接口元组**适合用在想要多个接口时（相同、不同类型的接口都行）。因为元组允许每个元素的类型不同。强烈推荐！
 
-### e.g. 可配置自增寄存器 v2
+### <span id="head98">e.g. 可配置自增寄存器 v2</span>
 
 将 `mkIncreaseRegCfg`  的接口改为接口二元组 `Tuple2#(Reg#(int), Reg#(int))` ，代码如下：
 
@@ -3709,7 +3797,7 @@ match {.inc_reg_data, .inc_reg_step} <- mkIncreaseRegCfg; // 得到 inc_reg_data
 
 
 
-## 7.9 动作函数
+## <span id="head99">7.9 动作函数</span>
 
 **动作函数** (Action Function) 就像**动作方法** (Action Method) 一样，内部可以包含多个子模块的方法。但是它只被本模块所调用，不能被其它模块调用。动作函数用来把一些常用的语句组合打包，来达到一次定义、多次调用的目的。
 
@@ -3744,19 +3832,19 @@ endmodule
 
 
 
-# 8 存储与队列
+# <span id="head100">8 存储与队列</span>
 
 本章学习除了寄存器和 Wire 以外最常用的一系列模块：
 
 - 片内存储器 (BRAM)：暂存几百Byte ~ 几十MByte 级别的数据（在通常的 FPGA 内）
 
 - 先入先出队列 (FIFO) ，可压入 (enq) 数据，也可以获取(first)和弹出(deq)其中最旧(最早压入)的数据。可以用来：
-  - 小容量 FIFO：用来构建具有反压 (back-pressure) 或停顿 (stall) 能力的弹性流水线电路，**非常实用！！**
-  - 大容量 FIFO：即 BRAMFIFO ，在输入和输出节奏不一致时，用来堆积大量数据。
+- 小容量 FIFO：用来构建具有反压 (back-pressure) 或停顿 (stall) 能力的弹性流水线电路，**非常实用！！**
+- 大容量 FIFO：即 BRAMFIFO ，在输入和输出节奏不一致时，用来堆积大量数据。
 
 
 
-## 8.1 BRAMCore
+## <span id="head101">8.1 BRAMCore</span>
 
 BRAMCore 包提供了 “裸 BRAM”，不提供读缓存队列、写响应队列等复杂功能，它的读方法、写方法也没有任何隐式条件。
 
@@ -3768,7 +3856,7 @@ BRAMCore 包生成的 Verilog 代码会自动适配 Xilinx 和 Altera 各种型�
 import BRAMCore::*;
 ```
 
-### 接口定义
+### <span id="head102"> 接口定义</span>
 
 对于单口 RAM，BRAMCore 包提供了一个基础的单口存储器接口 `BRAM_PORT` ：
 
@@ -3788,7 +3876,7 @@ interface BRAM_DUAL_PORT#(type addr, type data);   // 双口 RAM 接口
 endinterface
 ```
 
-### 模块定义
+### <span id="head103"> 模块定义</span>
 
 BRAMCore 包提供了 `mkBRAMCore1` 模块用来创建单口 RAM， `mkBRAMCore2` 模块用来创建双口 RAM 。它们的定义是：
 
@@ -3805,7 +3893,7 @@ module mkBRAMCore2#(Integer memSize, Bool hasOutputRegister) (BRAM_DUAL_PORT#(ad
 - `hasOutputRegister = False` ： 读数据不经过寄存器，读延迟=1（即从调用 put 到 read 上产生读出数据需要经过1个周期）
 - `hasOutputRegister = True` ： 读数据经过一个寄存器，读延迟=2
 
-### 示例
+### <span id="head104"> 示例</span>
 
 以下语句实例化一个单口 RAM 和一个 双口 RAM ：
 
@@ -3853,7 +3941,7 @@ BRAMCore 的 put 和 read 方法都不具有隐式条件。
 
 时间差不能早也不能晚，否则不保证读到正确数据。
 
-### 用文件载入初始化数据（仅仿真）
+### <span id="head105"> 用文件载入初始化数据（仅仿真）</span>
 
 mkBRAMCore1Load 和 mkBRAMCore2Load 模块在仿真开始时用一个文本文件作为自身的初始数据。它们多出了两个参数：
 
@@ -3872,7 +3960,7 @@ module mkBRAMCore2Load#(Integer memSize, Bool hasOutputRegister, String file, Bo
 - 文本文件 data.txt 与 .bsv 文件在同一个目录下，那么 `String file` 应该取 `"data.txt"` 
 - 文本文件 hello.txt 在 .bsv 文件所在的目录下的 test 目录下，那么 `String file` 应该取 `"test/hello.txt"`
 
- `Bool binary=True` 代表文件由二进制数组成。以下是一个二进制文本文件内容的示例，每行一项数据，载入后，每项数据会占用 BRAM 的一个地址。
+`Bool binary=True` 代表文件由二进制数组成。以下是一个二进制文本文件内容的示例，每行一项数据，载入后，每项数据会占用 BRAM 的一个地址。
 
 ```
 01011011
@@ -3880,7 +3968,7 @@ module mkBRAMCore2Load#(Integer memSize, Bool hasOutputRegister, String file, Bo
 00011010
 ```
 
- `Bool binary=False` 代表文件由十六进制组成。以下是一个十六进制文本文件的示例，每行一项数据，载入后，每项数据会占用 BRAM 的一个地址。
+`Bool binary=False` 代表文件由十六进制组成。以下是一个十六进制文本文件的示例，每行一项数据，载入后，每项数据会占用 BRAM 的一个地址。
 
 ```
 DEAD
@@ -3894,7 +3982,7 @@ BSV 生成的 Verilog 代码中，它们会分别使用的是 `$readmemb()` 和 
 
 
 
-## 8.2 BRAM
+## <span id="head106">8.2 BRAM</span>
 
 BRAM 包提供了读缓存队列等功能，比 BRAMCore 用起来更方便。
 
@@ -3906,7 +3994,7 @@ BRAM 包生成的 Verilog 代码会自动适配 Xilinx 和 Altera 各种型号�
 import BRAM::*;
 ```
 
-### 配置结构体 BRAM_Configure
+### <span id="head107">配置结构体 BRAM_Configure</span>
 
 实例化 BRAM 时需要用到结构体类型 `BRAM_Configure` （目前还没学结构体，但不影响理解），该结构体包含以下字段：
 
@@ -3933,7 +4021,7 @@ defaultValue = BRAM_Configure {
    allowWriteResponseBypass : False  };
 ```
 
-### 读写操作结构体 BRAMRequest
+### <span id="head108">读写操作结构体 BRAMRequest</span>
 
 向 BRAM 发起一个读写操作时，需要用到另一个结构体类型 `BRAMRequest` ，包含以下字段：
 
@@ -3946,7 +4034,7 @@ typedef struct {
 } BRAMRequest#(type addr, type data) deriving(Bits, Eq);
 ```
 
-### 接口定义
+### <span id="head109"> 接口定义</span>
 
 单口 RAM 和双口 RAM 的接口分别如下：
 
@@ -3971,7 +4059,7 @@ endinterface: BRAM2Port
 - `request.put(BRAMRequest req)` 用来发起一个读写操作，是一个动作方法。
 - `response.get` 用来获取一个读数据或写响应，是一个动作值方法。
 
-### 模块定义
+### <span id="head110"> 模块定义</span>
 
 单口 RAM 和双口 RAM 的模块定义如下：
 
@@ -3985,7 +4073,7 @@ module mkBRAM2Server #( BRAM_Configure cfg ) ( BRAM2Port #(taddr, tdata) )
 
 可以看出，他们都使用 `BRAM_Configure` 结构体类型作为配置参数。
 
-### 示例
+### <span id="head111"> 示例</span>
 
 以下语句实例化一个单口 RAM ，地址类型是 `Bit#(10)` ，数据的类型是 `Int#(8)` 。使用默认配置，因此 BRAM 容量是默认的 2^10=1024 ，不使用文件设置初始值，读数据和写响应的延迟=1，读数据和写响应的缓存大小=3。
 
@@ -4031,20 +4119,20 @@ int rdata <- ram2.portB.response.get;    // 动作值方法
 
 注意：因为 ram2 的延迟=2，所以调用 `request.put` 进行读操作的两个周期后，`response.get` 才能获得读出的数据。
 
-### 隐式条件
+### <span id="head112"> 隐式条件</span>
 
 BRAM 具有一个读数据和写响应的缓存队列（一般我们不用写响应，所以简称读缓存队列）。每次调用 `request.put` 发起一个读操作，相当于向读缓存压入了一项数据；每次调用 `response.get` 相当于从读缓存中拿出了一项数据。因此：
 
 - 只有当缓存不为空时，`response.get` 的隐式条件才满足
-  - 换言之，如果不发起 `request.put` 读操作，就不能从 `response.get` 拿到数据
+- 换言之，如果不发起 `request.put` 读操作，就不能从 `response.get` 拿到数据
 - 只有当缓存不为满时， `request.put` 的隐式条件才满足
-  - 换言之，如果不及时调用 `response.get` 把数据拿走，当读缓存满时，就无法调用 `request.put` 了
+- 换言之，如果不及时调用 `response.get` 把数据拿走，当读缓存满时，就无法调用 `request.put` 了
 
 注意：以上叙述都是指相同的口。而双口 RAM 的 A口 和 B口是完全独立的，各自有各自的读缓存，互不影响。
 
 
 
-### e.g. 矩阵转置
+### <span id="head113">e.g. 矩阵转置</span>
 
 我们借助 BRAM ，用双缓冲的思想编写一个流式的 8×8 矩阵的转置器。功能要求是：
 
@@ -4081,7 +4169,7 @@ BRAM2Port#( Tuple3#(bit, UInt#(3), UInt#(3)) , int ) ram <- mkBRAM2Server(defaul
 
 如此一来，我们就能区分**图11(a)**（空）和**图11(c)**（满）这两种情况，而如果用 1bit 的指针则不行。
 
-|        ![图11](.\readme_image\11.doublebuffer.png)         |
+|        ![图11](./readme_image/11.doublebuffer.png)         |
 | :--------------------------------------------------------: |
 | **图11**：一种使用 2bit 的读写块号指针来控制双缓冲的技巧。 |
 
@@ -4153,13 +4241,13 @@ endmethod
 
 - 借助 BRAM 实现双缓冲，在外界积极不断地输入和拿出数据的情况下，能达到 1数据/周期 的吞吐率。
 - 能轻松实现在外界不积极输入数据、输出数据的情况下，仍然保持结果正确：
-  - 如果外界不积极地调用 `put` 方法，双缓冲经常为空，导致 `read_ram` 规则不激活，从而不再读出数据。
-  - 如果外界不积极地调用 `get` 方法，则 `ram.portB` 的读缓冲区积攒数据，导致 `ram.portB.request.put` 被阻塞，导致 `read_ram` 规则不激活，导致双缓冲经常处于满的状态，最终导致 `put` 方法不能执行。
+- 如果外界不积极地调用 `put` 方法，双缓冲经常为空，导致 `read_ram` 规则不激活，从而不再读出数据。
+- 如果外界不积极地调用 `get` 方法，则 `ram.portB` 的读缓冲区积攒数据，导致 `ram.portB.request.put` 被阻塞，导致 `read_ram` 规则不激活，导致双缓冲经常处于满的状态，最终导致 `put` 方法不能执行。
 
 
 
 
-## 8.3 队列 FIFO 概览
+## <span id="head114">8.3 队列 FIFO 概览</span>
 
 FIFO 是一类非常有用的模块。BSV 提供了几个 FIFO 包。在只进行同步时序逻辑设计时，只需了解 FIFO 、 FIFOF 、 SpecialFIFOs 、BRAMFIFO 这四个包中的各种同步 FIFO 就够。使用前根据需要引入它们：
 
@@ -4211,13 +4299,13 @@ FIFO 模块众多，功能大同小异，概览如**表16**。（从模块名可
 
 **图7** 展示了 `mkFIFO` 、 `mkFIFO1`、 `mkLFIFO` 、 `mkBypassFIFO` 在什么情况下允许在同一周期并发压入和弹出。具体的解释和用例见本章的后文。
 
-|              ![图7](.\readme_image\7.fifos.png)              |
+|              ![图7](./readme_image/7.fifos.png)              |
 | :----------------------------------------------------------: |
 | **图7**：mkFIFO、mkFIFO1、mkLFIFO、mkBypassFIFO 的并发行为。 |
 
 
 
-## 8.4 常规 FIFO
+## <span id="head115">8.4 常规 FIFO</span>
 
 常规 FIFO 的行为是：
 
@@ -4235,7 +4323,7 @@ FIFO 模块众多，功能大同小异，概览如**表16**。（从模块名可
 1. mkFIFO 在内含1个数据时，既不满也不空，可以支持在同一周期内并发的 enq 和 deq 。
 2. mkFIFO1 要么空、要么满，不可能支持并发的 enq 和 deq ，只能交替进行 enq 和 deq，所以并不常用。
 
-### 实例化和调用 FIFO
+### <span id="head116">实例化和调用 FIFO</span>
 
 以下语句实例化了四个 FIFO ：
 
@@ -4270,7 +4358,7 @@ if(v1 == v3)
    fifo1.deq;
 ```
 
-### 常规 FIFO 的调度注解
+### <span id="head117">常规 FIFO 的调度注解</span>
 
 **表17**是具有 `FIFOF#()` 接口的常规 FIFO 的调度注解 :point_down: 。对于 `FIFO#()` 接口，忽略方法 notFull 和 notEmpty 即可。
 
@@ -4287,7 +4375,7 @@ if(v1 == v3)
 
 
 
-### e.g. 开平方计算流水线 v2
+### <span id="head118">e.g. 开平方计算流水线 v2</span>
 
 本例展示用常规 FIFO 构建具有反压功能的弹性流水线。
 
@@ -4379,7 +4467,7 @@ endmodule
 
 
 
-## 8.5 不保护 FIFO
+## <span id="head119">8.5 不保护 FIFO</span>
 
 不保护 (Unguarded) 机制包括：
 
@@ -4426,7 +4514,7 @@ FIFOF#(int) fifo3 <- mkGSizedFIFOF(True, True, 5);  // 容量=5，不保护压�
 
 
 
-## 8.6 LFIFO
+## <span id="head120">8.6 LFIFO</span>
 
 LFIFO （流水线FIFO）包括4个模块：`mkLFIFO`、`mkLFIFOF`、`mkGLFIFOF`、`mkUGLFIFOF` 。它们的容量都=1，但支持在满时并发进行压入和弹出，所以能像 容量=2 的 mkFIFO 那样，用来构成吞吐率=1数据/周期的高性能流水线（参考**图7**）。
 
@@ -4450,20 +4538,20 @@ FIFOF#(int) fifo2 <- mkGLFIFOF(False, True);   // 容量=1，接口为 FIFOF，�
 
 在具有旁路 (bypass) 或转发 (forward) 结构的流水线中，需要慎重分析哪些地方必须用 LFIFO ，否则可能导致行为错误。比如如下的累加式存储器。
 
-### e.g. 累加式写入的存储器
+### <span id="head121">e.g. 累加式写入的存储器</span>
 
 累加式存储器可以用来进行直方图统计，即统计输入数据流中各数据出现的频率。要求：
 
 - 功能：
-  - 输入：地址 addr 和 data
-  - 普通写：把 data 写入 addr
-  - 累加写：读取 addr 中的数据 rdata ，与 data 相加后，再写回 addr。
-  - 输出：无论是普通写还是累加写，都输出本次操作的地址 addr 和写入本地址的新值 data
+- 输入：地址 addr 和 data
+- 普通写：把 data 写入 addr
+- 累加写：读取 addr 中的数据 rdata ，与 data 相加后，再写回 addr。
+- 输出：无论是普通写还是累加写，都输出本次操作的地址 addr 和写入本地址的新值 data
 - 性能：吞吐率能达到 1 数据/周期
 - 要求有输入有效和输出反压机制
 - 时钟频率：为了不让组合逻辑路径太长，要求读 BRAM、加法计算、写 BRAM 先后放在3个不同的流水级。
 
-| ![图8](.\readme_image\8.forward_pipeline.png) |
+| ![图8](./readme_image/8.forward_pipeline.png) |
 | :-------------------------------------------: |
 |   **图8**：累加式写入存储器的流水线示意图。   |
 
@@ -4529,7 +4617,7 @@ endrule
 
 
 
-## 8.7 DFIFOF
+## <span id="head122">8.7 DFIFOF</span>
 
 本节介绍模块 `mkDFIFOF`
 
@@ -4546,7 +4634,7 @@ FIFOF#(int) fifo <- mkDFIFOF(42);    // 默认值=42
 
 `mkDFIFOF` 可以视为一种不保护弹出 (ugdeq) 的 FIFO ，即 `mkGFIFOF(False, True)` ，但是能读出默认值的特点让它更实用。
 
-### e.g. 比特编码器 v5
+### <span id="head123">e.g. 比特编码器 v5</span>
 
 我们用 `mkDFIFOF` 和 `mkFIFO` 改进 7.4 节遗留的具有输出反压功能的比特编码器，让它能获得接近 1数据/周期 的吞吐率。
 
@@ -4556,7 +4644,7 @@ FIFOF#(int) fifo <- mkDFIFOF(42);    // 默认值=42
 
 为了优雅地解决该关键点，我们在第1级和第2级之间使用 `mkDFIFOF` 。理由是：我们可以给 `mkDFIFOF` 设置一个默认值二元组： (生成码, 生成码的长度) = (0, 0) 。如果刚好 mkDFIFOF 为空，会取出默认值，而不会因为隐式条件的存在而阻止第2级的规则激活。
 
-| ![图9](.\readme_image\9.bit_coding.png) |
+| ![图9](./readme_image/9.bit_coding.png) |
 | :-------------------------------------: |
 |   **图9**：比特编码器的流水线示意图。   |
 
@@ -4626,7 +4714,7 @@ endmodule
 
 
 
-## 8.8 BypassFIFO
+## <span id="head124">8.8 BypassFIFO</span>
 
 BypassFIFO 包括3个模块： 
 
@@ -4647,13 +4735,13 @@ BypassFIFO 在为空时支持并发 enq 与 deq （参考**图7**)，此时 enq 
 
 在本教程最后提供的 RISC-V Rv32i 流水线 CPU 中，将使用这种设计（详见 13.2 节）。
 
-|           ![图10](.\readme_image\10.cpu_if_id.png)           |
+|           ![图10](./readme_image/10.cpu_if_id.png)           |
 | :----------------------------------------------------------: |
 | **图10** ：流水线式 CPU 的 IF 和 ID 阶段，用 mkBypassFIFO 来支持取指令总接线口的停顿（例如cache miss） |
 
 
 
-## 8.9 大容量的 BRAMFIFO
+## <span id="head125">8.9 大容量的 BRAMFIFO</span>
 
 使用 BRAMFIFO 前需要引入：
 
@@ -4681,11 +4769,11 @@ BRAMFIFO 用起来和常规 FIFO 行为相同。
 
 
 
-# 9 高级数据类型
+# <span id="head126">9 高级数据类型</span>
 
 BSV 提供一些复杂的数据类型，包括数组 (array)、向量 (Vector)、元组 (tuple)、枚举 (enum)、结构体 (struct)、标签联合体 (union tagged) 。以及一些高级语句，包括 case 表达式、case 语句。
 
-## 9.1 数组 array
+## <span id="head127">9.1 数组 array</span>
 
 使用 `[]` 符号定义数组，`[]` 中的值必须是一个常量表达式。
 
@@ -4722,7 +4810,7 @@ int arr3 [3] = {1, 7, 6};                // 三个元素分别为 1,7,6
 int arr4 [2][3] = {{2,5,9}, {3,7,1}};
 ```
 
-### 寄存器数组
+### <span id="head128"> 寄存器数组</span>
 
 如下例子创建了一个长度为 4 的寄存器接口数组，并用 for 循环分别给数组每项都实例化了 `mkRegU` 。
 
@@ -4754,7 +4842,7 @@ endrule
 
 
 
-## 9.2 向量 Vector
+## <span id="head129">9.2 向量 Vector</span>
 
 向量是一种复合数据类型，能提供比数组更强大的功能。使用前需要引入：
 
@@ -4785,7 +4873,7 @@ let tmp = pack(vec2);                          // 得到： tmp 是 Bit#(16) 类
 Vector#(4, UInt#(4)) vec3 = unpack('h5678);    // 得到： vec3 的四个元素分别为 8, 7, 6, 5
 ```
 
-### 使用 Vector 相关函数
+### <span id="head130">使用 Vector 相关函数</span>
 
 这里介绍 Vector 包提供的几种函数： `replicate` 、 `map` 、 `genVector` 、 `reverse` 和 `rotate` 。
 
@@ -4829,7 +4917,7 @@ Vector#(4, int) vec5 = reverse( vec4 );                 // vec5： 3,2,1,0
 Vector#(4, int) vec6 = rotate( vec4 );                  // vec6： 1,2,3,0
 ```
 
-### 多维 Vector
+### <span id="head131">多维 Vector</span>
 
 创建多维 Vector ，只需把 Vector 类型嵌套即可。
 
@@ -4847,7 +4935,7 @@ vec34[2][3] = -8;
 Vector#(4, int) tmp = vec34[1];
 ```
 
-### 寄存器 Vector
+### <span id="head132">寄存器 Vector</span>
 
 就像数组那样，Vector 的元素类型也可以是寄存器接口，以此来构成寄存器阵列。以下代码定义并实例化了长度为 8 的寄存器向量，每个寄存器接口类型都是 `Reg#(int)` ，并被 `mkReg(1)` 实例化。
 
@@ -4881,7 +4969,7 @@ endrule
 Vector#(5, FIFO#(int)) fifo_vec <- replicateM( mkFIFO );    // 5 个独立的 FIFO
 ```
 
-### 存放 Vector 的寄存器
+### <span id="head133">存放 Vector 的寄存器</span>
 
 需要区分 **寄存器 Vector** 和 **存放 Vector 的寄存器** 的概念，比如以下：
 
@@ -4904,7 +4992,7 @@ endrule
 
 
 
-## 9.3 typedef 关键字
+## <span id="head134">9.3 typedef 关键字</span>
 
 `typedef` 关键字用于定义一个新类型。后续的枚举 (enum)、结构体 (struct)、带标记的联合体 (tagged union) 都要用到 `typedef` 。 `typedef` 定义变量时，必须放在模块外、包内，不能放在模块内。
 
@@ -4920,7 +5008,7 @@ typedef UInt#(32) Uint;
 
 
 
-## 9.4 枚举 enum
+## <span id="head135">9.4 枚举 enum</span>
 
 枚举类型的变量只能取规定的标签。比如红绿灯类型只能取 Red, Green, Yellow ，则可以定义枚举类型：
 
@@ -5007,7 +5095,7 @@ else if(opcode == LOAD)
 
 
 
-## 9.5 结构体 struct
+## <span id="head136">9.5 结构体 struct</span>
 
 结构体(struct)是由成员变量组成的复合类型，每个成员都要规定一个类型。与元组 (Tuple) 不同的是：
 
@@ -5077,7 +5165,7 @@ pixel.coord.x = 8;
 
 
 
-## 9.6 标签联合体 union tagged
+## <span id="head137">9.6 标签联合体 union tagged</span>
 
 标签联合体 (union tagged) 是由成员变量组成的复合类型，区别于结构体，标签联合体每次只能取一种成员变量的值。比如，以下定义一个标签联合体名为 Pixel ，它要么取无效 None ，要么取黑白 16 bit Alpha ，要么取彩色 RGB （用一个嵌套的结构体来RGB）。
 
@@ -5153,14 +5241,14 @@ typedef union tagged {
 
 
 
-## 9.7 case 语句与表达式
+## <span id="head138">9.7 case 语句与表达式</span>
 
 BSV 具有 case 语句和 case 表达式：
 
 - case 语句用来在一个变量匹配某值时执行一系列子语句。就像 Verilog 的 case 或 C 语言的 switch case 那样。
 - case 表达式用来在一个变量匹配某值时产生一个返回值，作为整个 case 表达式的取值。 Verilog 和 C 语言没有这种机制。
 
-### case 语句
+### <span id="head139">case 语句</span>
 
 以下 case 语句根据变量 x 的取值，执行语句来给变量 y 赋值。
 
@@ -5190,7 +5278,7 @@ case(x)
    'b0001  : ...
 ```
 
-### case 表达式
+### <span id="head140">case 表达式</span>
 
 以下 `case...endcase` 构成一个表达式。对于每一个匹配值，使用 return 语句返回一个值，作为整个 case 表达式的取值。
 
@@ -5209,7 +5297,7 @@ y= case(x)
    endcase;   // 这里必须要有分号; 因为 y=case...endcase; 加上分号后才是完整的语句
 ```
 
-### case matches 模糊匹配
+### <span id="head141">case matches 模糊匹配</span>
 
 模糊匹配（dont-care 匹配）的格式是 `case (...) matches ... endcase` ，可以是 case 语句/表达式 。注意比普通 case 语句/表达式多了一个 `matches` 关键字。
 
@@ -5232,7 +5320,7 @@ y = case(x) matches
 
 
 
-# 10 多态
+# <span id="head142">10 多态</span>
 
 多态（polymorphism）可以尽可能多地实现代码重用。比如：
 
@@ -5244,7 +5332,7 @@ y = case(x) matches
 
 
 
-## 10.1 多态中的基本概念
+## <span id="head143">10.1 多态中的基本概念</span>
 
 我们以往接触过的函数参数类型和返回值类型都是固定的类型，比如是一个 int ：
 
@@ -5345,7 +5433,7 @@ endfunction
 注意区分普通函数、类型函数、伪函数：
 
 - **普通函数**（也就是5.6节学到的函数）：在仿真运行时执行。如果是可综合的，会转化成组合逻辑电路。
-  - 特殊情况：当参数都为常量时，会在编译时就确定下返回值，从而降低仿真时的计算量和生成电路的面积，称为**常量传递**。
+- 特殊情况：当参数都为常量时，会在编译时就确定下返回值，从而降低仿真时的计算量和生成电路的面积，称为**常量传递**。
 
 - **类型函数、伪函数**：编译期间执行。
 
@@ -5359,7 +5447,7 @@ endfunction
 
 
 
-### 派生要求一览
+### <span id="head144"> 派生要求一览</span>
 
 ​			**表18**：派生要求一览表。
 
@@ -5374,7 +5462,7 @@ endfunction
 | BitReduction#(t) | BitReduction          | 逐位合并运算来产生1bit的结果（类比Verilog中的 \|a 写法）     |
 | BitExtend#(t)    | BitExtend             | extend(), zeroExtend(), signExtend(), truncate()             |
 
-### 关系要求一览
+### <span id="head145"> 关系要求一览</span>
 
 ​			**表19**：关系要求一览表。
 
@@ -5387,7 +5475,7 @@ endfunction
 | Min#(n, m, k) | 要求n和m的最小值=k |                                                 |
 | Log#(n, m)    | 要求 log2(n-1)+1=m | 忽视m的小数部分。或者说，编码数字n-1至少要m比特 |
 
-### 数值函数一览
+### <span id="head146"> 数值函数一览</span>
 
 ​			**表20**：数值函数一览表。
 
@@ -5416,7 +5504,7 @@ endfunction
 | 17\~32 | 5                |
 | ...    | ...              |
 
-### 伪函数一览
+### <span id="head147"> 伪函数一览</span>
 
 ​			**表22**：伪函数一览表。
 
@@ -5436,7 +5524,7 @@ endfunction
 
 
 
-## 10.2 多态函数举例
+## <span id="head148">10.2 多态函数举例</span>
 
 **例一**：获取 Vector 的的长度：
 
@@ -5555,13 +5643,13 @@ UInt#(35) sum = vectorSumAutoExtend(vec1);   // 自动扩展了 3 bit
 
 
 
-## 10.3 多态模块举例
+## <span id="head149">10.3 多态模块举例</span>
 
 多态模块也是通过以上**派生要求** 、 **关系要求** 、 **类型函数** 和 **伪函数** 来约束变量之间的关系来实现的。本节举几个例子。
 
 > 注意：多态模块是无法添加 `(* synthesize *)` 作为独立可综合模块的，因为它本身并没有确定下内部的数据结构，无法独立地生成 Verilog （Verilog 可没有多态的概念）。但这不代表多态模块不可综合，当它被其它模块调用时，其数据类型等信息被确定下来后，照样可以作为调用者模块的一部分而生成 Verilog 。
 
-### e.g. 自定义更多的寄存器
+### <span id="head150">e.g. 自定义更多的寄存器</span>
 
 我们在 `src/22.MoreRegs/MoreRegs.bsv` 中实现了两种新的寄存器：
 
@@ -5605,7 +5693,7 @@ Reg#(int) wire_reg <- mkWireReg(0);   // 实例化一个 mkWireReg ，他有一�
 
 
 
-### e.g. 自定义双缓冲模块
+### <span id="head151">e.g. 自定义双缓冲模块</span>
 
 我们实现一个通用的、多态的双缓冲模块 `mkDoubleBuffer`  ，它能积攒 n 个数据再一并提交。要求如下：
 
@@ -5613,7 +5701,7 @@ Reg#(int) wire_reg <- mkWireReg(0);   // 实例化一个 mkWireReg ，他有一�
 - 内部具有两块存储，构成双缓冲，每块存储 n 个数据元素。
 - 读和写只能交替在两块上进行，读 block0 的同时只能写 block1 ，反之亦然。
 - 每次写一项数据元素，攒够 n 个数据元素后，转而去写另一个块（这称为“提交”）。
-  - 允许撤销 (cancel) 当前正在写的块，丢弃之前已经写入的还未提交的数据，从零开始积攒 n 个数据。
+- 允许撤销 (cancel) 当前正在写的块，丢弃之前已经写入的还未提交的数据，从零开始积攒 n 个数据。
 - 每次都读出整个块（即所有 n 个元素），相同的块一共要读 readTimes 次，然后转而去读另一个块。
 
 以下是实现：
@@ -5697,7 +5785,7 @@ module mkDoubleBuffer#( UInt#(32) readTimes ) ( DoubleBuffer#(n, td) )
 
 如此一来，我们就能区分**图11(a)**（空）和**图11(c)**（满）这两种情况，而如果用 1bit 的指针则不行。
 
-|      ![图11](.\readme_image\11.doublebuffer.png)       |
+|      ![图11](./readme_image/11.doublebuffer.png)       |
 | :----------------------------------------------------: |
 | **图11**：一种使用 2bit 的读写指针来控制双缓冲的技巧。 |
 
@@ -5832,11 +5920,11 @@ cnt=[  47]   rcnt=[   2]   data={ 40 41 42 43 44}
 
 
 
-# 11 状态机 StmtFSM
+# <span id="head152">11 状态机 StmtFSM</span>
 
 StmtFSM 是 BSV 提供的一个非常实用的包，用来以顺序执行的结构构造状态机，既可以综合，又可以用于构建 testbench 。
 
-## 11.1 基本的构建和使用方法
+## <span id="head153">11.1 基本的构建和使用方法</span>
 
 使用前要先引入：
 
@@ -5857,7 +5945,7 @@ Stmt test =
    endseq;
 ```
 
-### mkFSM
+### <span id="head154"> mkFSM</span>
 
 然后，用以上行为描述构建一个状态机模块 mkFSM ：
 
@@ -5912,7 +6000,7 @@ endrule
 
 因为状态机 testFSM 有三个状态，每个状态占一个周期，再考虑上 FSM 空闲占一个周期，所以以上代码中 testFSM 每四周期运行一轮。
 
-### mkAutoFSM
+### <span id="head155"> mkAutoFSM</span>
 
 mkAutoFSM 模块没有接口，不需要调用 start 方法就直接开始运行，且运行完后自动运行 `$finish;`  因此 mkAutoFSM 往往用来构建 testbench 流程。比如：
 
@@ -5928,11 +6016,11 @@ mkAutoFSM 模块没有接口，不需要调用 start 方法就直接开始运行
 
 
 
-## 11.2 执行结构
+## <span id="head156">11.2 执行结构</span>
 
 本节讲解 mkFSM 和 mkAutoFSM 的执行机制。
 
-### seq...endseq
+### <span id="head157"> seq...endseq</span>
 
 `seq...endseq` 用于描述顺序执行的结构，其中的每个语句占用一个状态，一个状态执行结束后就跳到下一个状态。状态分为两种：
 
@@ -5956,7 +6044,7 @@ mkAutoFSM 模块没有接口，不需要调用 start 方法就直接开始运行
    // 因为下面已经有 sfsm.waitTillDone 了，所以每次运行到 sfsm.start 时它是一定是空闲的。
 ```
 
-### await 函数
+### <span id="head158">await 函数</span>
 
 `await` 是 StmtFSM 包中的一个函数，它会根据一个 Bool 类型创作一个具有隐式条件的动作，只有 Bool 类型 = True 时，该动作才会执行。在 FSM 中，它可以起到 “等待某个 Bool 变量为 True 为止” 的效果。比如以上代码中 `sfsm.waitTillDone` 也可以写成：
 
@@ -5970,7 +6058,7 @@ mkAutoFSM 模块没有接口，不需要调用 start 方法就直接开始运行
    endseq );
 ```
 
-### delay 函数
+### <span id="head159">delay 函数</span>
 
 `delay(n)` 是 StmtFSM 包中的一个函数，允许在状态机中延迟 n 个周期，再跳转到下一个状态。比如：
 
@@ -5983,7 +6071,7 @@ mkAutoFSM 模块没有接口，不需要调用 start 方法就直接开始运行
    endseq );
 ```
 
-### action...endaction
+### <span id="head160"> action...endaction</span>
 
 action 可以把多个动作语句合并成一个动作。
 
@@ -6021,11 +6109,11 @@ action 可以把多个动作语句合并成一个动作。
 
 注意：`action...endaction` 中不能嵌套 `seq...endseq` 和 delay 函数，但可以嵌套 await 函数。
 
-### noAction
+### <span id="head161"> noAction</span>
 
 `noAction;` 是一个“什么都不干”的动作，写在 `seq...endseq` 中时会作为一个状态消耗一个周期。
 
-### repeat
+### <span id="head162"> repeat</span>
 
 `repeat(n) ...` 可以把一个结构重复执行 n 次，比如可以把一个 seq 顺序结构重复三次：
 
@@ -6053,7 +6141,7 @@ action 可以把多个动作语句合并成一个动作。
    endseq );
 ```
 
-### par...endpar
+### <span id="head163"> par...endpar</span>
 
 如果说 `action...endaction` 描述的是同步并行执行，那么 `par...endpar` 描述的就是异步并行执行。  `par...endpar` 中可以嵌套 `seq...endseq` ， `action...endaction` ，或者单个动作语句，每个都会成为一个线程，各个线程独立互不干扰地执行，直到所有线程执行结束，整个 `par...endpar` 才算执行完，然后才去执行 `endpar` 后面的语句。
 
@@ -6084,13 +6172,13 @@ action 可以把多个动作语句合并成一个动作。
 
 
 
-## 11.3 分支和循环
+## <span id="head164">11.3 分支和循环</span>
 
 根据之前所学，我们知道 BSV 中的 if 分支、while 循环、for 循环都是在单周期内执行的动作，循环会被完全展开。
 
 然而，如果在 `seq...endseq` 结构中描述分支和循环，它们会变成顺序的。
 
-### if 分支
+### <span id="head165">if 分支</span>
 
 当 `seq...endseq` 结构中执行到分支结构 `if() ... else if() ... else if() .. else ...`  时，会判断条件来选择一个分支，该判断不消耗时钟周期。不过，每条分支下都至少要有一个动作，这样保证无论选择哪个分支，整个 `if` 分支结构都消耗至少一个时钟周期，如果某个分支内什么都不想干，就用 `noAction;` 动作占用一个周期。
 
@@ -6118,7 +6206,7 @@ action 可以把多个动作语句合并成一个动作。
 
 >  注意区分另一种情况：如果 `if` 分支被嵌套在  `action...endaction` 中，那么整个分支就是在单周期内执行的。
 
-### while 循环
+### <span id="head166">while 循环</span>
 
 当 `seq...endseq` 结构中执行到循环结构 `while(cond) ...`  时，会判断：
 
@@ -6144,9 +6232,9 @@ action 可以把多个动作语句合并成一个动作。
 
 > 注意区分另一种情况：如果 `while` 循环被嵌套在  `action...endaction` 中，那么整个循环就是在单周期内执行的，也就是会被编译器完全地进行循环展开。
 
-### for 循环
+### <span id="head167">for 循环</span>
 
- `seq...endseq` 结构中出现的 for 循环：
+`seq...endseq` 结构中出现的 for 循环：
 
 ```verilog
 seq
@@ -6188,7 +6276,7 @@ endseq
 
 
 
-## 11.4 区别局部变量和寄存器
+## <span id="head168">11.4 区别局部变量和寄存器</span>
 
 在顺序结构 `seq..endseq` 中，不能定义和使用局部变量，因为局部变量并不能将自身的值保存到下周期，而顺序结构是按周期顺序执行的，在顺序结构中使用局部变量没有意义。比如：
 
@@ -6218,20 +6306,20 @@ endseq
 
 
 
-## 11.5 举例
+## <span id="head169">11.5 举例</span>
 
-### e.g. SPI 发送器
+### <span id="head170">e.g. SPI 发送器</span>
 
 我们回顾 2.1 节展示的 SPI 发送器，它的时序波形如**图1** 。
 
-| ![图1](.\readme_image\1.SPI.png) |
+| ![图1](./readme_image/1.SPI.png) |
 | :------------------------------: |
 |  **图1**：SPI 发送控制器的波形   |
 
 SPI 发送器 `mkSPIWriter` 的代码如下。实现思路是：
 
 - 在 write 方法里，把待写的 8 bit 数据（字节）存到 wdata 寄存器里，并启动状态机。
-  - 注意：write 方法会获得隐式条件“状态机空闲”，也就是说，当状态机正忙时，外界无法调用 write 方法。
+- 注意：write 方法会获得隐式条件“状态机空闲”，也就是说，当状态机正忙时，外界无法调用 write 方法。
 - 状态机内，用 while 循环 8 次，每次拿出 wdata 中的一个 bit 赋给 mosi 信号。同时也要正确地控制 ss 和 sck 信号。
 - 在 spi 方法里，直接把 ss, sck, mosi 三个信号引出。
 
@@ -6298,22 +6386,22 @@ endmodule
 
 
 
-# 12 BSV for Verilog
+# <span id="head171">12 BSV for Verilog</span>
 
 无论 BSV 写的多花里胡哨，部署在 FPGA 最终还是要用 Verilog 。本节介绍如何把自己编写的 BSV 模块嵌入 Verilog 项目里。
 
 个人推荐的开发流程是：
 
 1. 编写 BSV 功能模块：
-   - 不仅要编写模块本身，还要编写一个 testbench 来调用并测试它。不仅是为了验证正确性，也是为了生成一个仿真波形，让我们在信号层面上理解调用者是如何和被调用者交互的。
-   - 在调试时，如果只想看仿真打印，推荐使用 BSV 仿真（而不是Verilog仿真），也就是命令行 `bsvbuild.sh -bs` ，因为仿真运行速度会更快。
-   - 对于你想要独立生成 Verilog 代码的模块，别忘了在 module 定义上加上 `(* synthesis *)`  属性
-   - 泛型模块不能作为生成 Verilog 代码的顶层，不能加  `(* synthesis *)`  属性，且只能被其它模块调用。
+- 不仅要编写模块本身，还要编写一个 testbench 来调用并测试它。不仅是为了验证正确性，也是为了生成一个仿真波形，让我们在信号层面上理解调用者是如何和被调用者交互的。
+- 在调试时，如果只想看仿真打印，推荐使用 BSV 仿真（而不是Verilog仿真），也就是命令行 `bsvbuild.sh -bs` ，因为仿真运行速度会更快。
+- 对于你想要独立生成 Verilog 代码的模块，别忘了在 module 定义上加上 `(* synthesis *)`  属性
+- 泛型模块不能作为生成 Verilog 代码的顶层，不能加  `(* synthesis *)`  属性，且只能被其它模块调用。
 2. 编写完成后，用命令行 `bsvbuild.sh -vw` 生成 Verilog 代码，并生成仿真 `.vcd`波形文件。
 3. 查看生成的 Verilog 模块的输入输出接口：
-   - 生成的 Verilog 文件 (.v) 可能有很多个，每个对应文件一个模块，包括一些子模块，以及仿真代码生成的仿真模块。你需要查看的是与你想要的 BSV 模块同名的 Verilog 模块。
+- 生成的 Verilog 文件 (.v) 可能有很多个，每个对应文件一个模块，包括一些子模块，以及仿真代码生成的仿真模块。你需要查看的是与你想要的 BSV 模块同名的 Verilog 模块。
 4. 打开 .vcd 波形文件，找到你想要的模块的调用者，查看它调用该模块的波形，理解各信号的意义。
-   - 如果你想要删除一些不必要的 EN 和 RDY 握手信号，在 BSV 代码文件中的模块上加上 `always_enabled` 和 `always_ready`  属性，重新生成 Verilog 。
+- 如果你想要删除一些不必要的 EN 和 RDY 握手信号，在 BSV 代码文件中的模块上加上 `always_enabled` 和 `always_ready`  属性，重新生成 Verilog 。
 5. 根据如上理解，以及你的项目需要，编写 Verilog 调用者代码来调用该模块。
 
 
@@ -6326,21 +6414,21 @@ endmodule
 
 
 
-## 12.1 输入输出信号
+## <span id="head172">12.1 输入输出信号</span>
 
 本节讲解 BSV 转化成 Verilog 后会生成怎样的信号，以及它们的行为。
 
-### 时钟和复位
+### <span id="head173"> 时钟和复位</span>
 
 首先，全局时钟信号输入 CLK 和全局复位信号输入 RST_N 是一定会生成的：
 
 - input CLK 全局时钟：模块的所有输出信号在 CLK 的上升沿变化 ，所有输入信号在 CLK 的上升沿被采样
-  - 这是标准的同步时序逻辑
+- 这是标准的同步时序逻辑
 - input RST\_N 全局同步复位：当 CLK 的上升沿，若 RST_N=0 ，模块中需要复位的寄存器复位。若 RST_N=1 ，则正常工作
 
 
 
-### 方法生成的信号
+### <span id="head174"> 方法生成的信号</span>
 
 每个方法都会生成一系列信号，如**表23** 。
 
@@ -6361,7 +6449,7 @@ endmodule
 
 
 
-### 举例：mkBitCoder 模块的信号
+### <span id="head175">举例：mkBitCoder 模块的信号</span>
 
 下面我们举例分析 `src/13.BitCoding/BitCoding_v5.bsv` 中的 `mkBitCoder` 模块生成的信号。
 
@@ -6450,13 +6538,13 @@ module mkBitCoder(CLK,
 对于值方法 first ：
 
 - output RDY_first : 代表当前周期 first 的隐式条件是否满足，即模块是否有可输出的数据
-  - 实际上和 RDY_deq 是永远相同的，因为它们来自同一个 fifo 的 first 和 deq 方法，二者隐式条件相同。
+- 实际上和 RDY_deq 是永远相同的，因为它们来自同一个 fifo 的 first 和 deq 方法，二者隐式条件相同。
 - output [7 : 0] first : 是 8bit 的输出数据，当 RDY_first=1 时有效。
 
 对于动作方法 clear :
 
 - output RDY_clear : 代表当前周期 clear 的隐式条件是否满足，即模块是否允许清空操作
-  - 因为没有隐式条件，此信号实际上永远=1
+- 因为没有隐式条件，此信号实际上永远=1
 - input  EN_clear : 代表外界是否想清空
 - 因为没有参数所以没有输入信号
 
@@ -6470,7 +6558,7 @@ module mkBitCoder(CLK,
 - 每当 RDY_deq=EN_deq=1 （握手成功），直到下次 RDY_deq=1 ，输出数据 first 会更新，这是因为成功弹出了上一个输出数据
 - RDY_deq 与 RDY_first 永远相等，因为 deq 与 first 隐式条件相同。在编写 Verilog 时任选一个来用即可。
 
-| ![图12](.\readme_image\12.wave1_bit_coder.png)  |
+| ![图12](./readme_image/12.wave1_bit_coder.png)  |
 | :---------------------------------------------: |
 | **图12**：BitCoder 的波形（积极输入，积极弹出） |
 
@@ -6479,7 +6567,7 @@ module mkBitCoder(CLK,
 - 调用者消极地调用 deq 方法：即 RDY_deq=1 时， EN_deq 不一定=1 ，这说明调用者可以根据需要来决定是否让 EN_deq=1 。
 - 其余分析结论与**图12**相同。
 
-| ![图13](.\readme_image\13.wave2_bit_coder.png)  |
+| ![图13](./readme_image/13.wave2_bit_coder.png)  |
 | :---------------------------------------------: |
 | **图13**：BitCoder 的波形（积极输入，消极弹出） |
 
@@ -6488,11 +6576,11 @@ module mkBitCoder(CLK,
 - 调用者消极地调用 enq 方法：即 RDY_enq=1 时， EN_enq 不一定=1 ，这说明调用者可以根据需要来决定是否让 EN_enq=1 。
 - 其余分析结论与**图12**相同。
 
-| ![图14](.\readme_image\14.wave3_bit_coder.png)  |
+| ![图14](./readme_image/14.wave3_bit_coder.png)  |
 | :---------------------------------------------: |
 | **图14**：BitCoder 的波形（消极输入，积极弹出） |
 
-### 总结
+### <span id="head176"> 总结</span>
 
 对于值方法：
 
@@ -6510,9 +6598,9 @@ module mkBitCoder(CLK,
 
 
 
-## 12.2 删除不必要的信号
+## <span id="head177">12.2 删除不必要的信号</span>
 
-### always_ready 属性
+### <span id="head178">always_ready 属性</span>
 
 有些方法没有隐式条件，或者说隐式条件=True ，那么 RDY=1 就是恒成立的，可以用 always_ready 断言该结论，同时删除生成 Verilog 后的 RDY 信号 。
 
@@ -6535,7 +6623,7 @@ module mkBitCoder ( FIFO#(Bit#(8)) );
 
 
 
-### always_enabled 属性
+### <span id="head179">always_enabled 属性</span>
 
 有些方法不仅没有隐式条件，而且总是希望每周期都被调用（比如 BypassWire 的 _write 方法），也就是说 EN=RDY=1 是恒成立的，可以用 `always_enabled` 断言该结论，同时删除生成 Verilog 后的 EN 和 RDY 信号。
 
@@ -6555,19 +6643,19 @@ module mkModule  ...
 
 对于一个加上  `always_enabled`  属性的方法，如果隐式条件不总是 = True ，或者调用它的 BSV 模块没有每周期都调用它 ，编译器就会报断言错误。
 
- `always_enabled`  属性仅仅适用于动作方法和动作值方法，而不能用于值方法，因为值方法没有 EN 信号。
+`always_enabled`  属性仅仅适用于动作方法和动作值方法，而不能用于值方法，因为值方法没有 EN 信号。
 
- `always_enabled`  属性不像  `always_ready`  用得那么多，一般只用在想要组合逻辑输入的情况下，比如该方法把参数写入了一个 BypassWire 内。
+`always_enabled`  属性不像  `always_ready`  用得那么多，一般只用在想要组合逻辑输入的情况下，比如该方法把参数写入了一个 BypassWire 内。
 
 
 
-## 12.3 引入缺少的 Verilog 库文件
+## <span id="head180">12.3 引入缺少的 Verilog 库文件</span>
 
 BSV 生成的 Verilog 会调用一些 BSV 提供的 Verilog 代码库。
 
 当你把 BSV 生成的模块用于 FPGA 项目时，需要把它依赖的代码库文件复制到你的项目里，才能让 BSV 生成的 Verilog 被 Vivado、Quartus 等工具综合（否则将报模块名未定义错误）。
 
-### Verilog 代码库的路径
+### <span id="head181">Verilog 代码库的路径</span>
 
 Verilog 代码库的路径包括：
 
@@ -6577,7 +6665,7 @@ Verilog 代码库的路径包括：
 
 在 3.1 节中我们把 `bsc` 安装在了 `/opt` 目录中，那么 `<bsc安装目录>` 就是 `/opt`  。
 
-### 根据需要引入文件
+### <span id="head182"> 根据需要引入文件</span>
 
 **方法一**是在你写的 BSV 生成的 Verilog 文件里查找 "submodule" 关键字，可以看到它调用的模块名，然后去 Verilog 代码库路径下找到这些文件，把它们复制并添加到你的 FPGA 项目里即可。
 
@@ -6602,7 +6690,7 @@ Verilog 代码库的路径包括：
 
 
 
-# 13 样例研究
+# <span id="head183">13 样例研究</span>
 
 本章提供三个样例 SPIFlash 读写器、 RISC-V 流水线 CPU 、 JPEG 图像压缩器 。
 
@@ -6610,17 +6698,17 @@ Verilog 代码库的路径包括：
 
 
 
-## 13.1 SPIFlash 读写器
+## <span id="head184">13.1 SPIFlash 读写器</span>
 
 代码目录：  `src/SPIFlash`
 
-### 原理介绍
+### <span id="head185"> 原理介绍</span>
 
 实现 W25QXX 系列 SPIFlash 的读写控制器，包括页读、页写、页擦除。
 
 思路是用 StmtFSM 包来写一个更复杂的状态机。后续补充……
 
-### 结果展示
+### <span id="head186"> 结果展示</span>
 
 运行命令生成仿真波形：
 
@@ -6630,17 +6718,17 @@ bsvbuild.sh -vw mkTb SPIFlashController.bsv
 
 查看波形：
 
-|  ![图14](.\readme_image\15.spiflash_wave.png)  |
+|  ![图14](./readme_image/15.spiflash_wave.png)  |
 | :--------------------------------------------: |
 | **图15**：仿真产生的页擦除、页写 (部分) 的波形 |
 
 
 
-## 13.2 RISC-V 流水线 CPU
+## <span id="head187">13.2 RISC-V 流水线 CPU</span>
 
 代码目录：  `src/Rv32iCPU`
 
-### 原理介绍
+### <span id="head188"> 原理介绍</span>
 
 实现的 CPU：
 
@@ -6652,7 +6740,7 @@ bsvbuild.sh -vw mkTb SPIFlashController.bsv
 
 后续补充……
 
-### 结果展示
+### <span id="head189"> 结果展示</span>
 
 **仿真**：
 
@@ -6672,11 +6760,11 @@ bsvbuild.sh -bs mkTb Rv32iCPU.bsv
 
 
 
-## 13.3 JPEG 图像压缩器
+## <span id="head190">13.3 JPEG 图像压缩器</span>
 
 代码目录：  `src/JpegEncoder`
 
-### 原理介绍
+### <span id="head191"> 原理介绍</span>
 
 该模块根据 JPEG 图像压缩算法的 python 代码 `src/JpegEncoder/python/jpeg_encoder.py` 编写。
 
@@ -6686,7 +6774,7 @@ bsvbuild.sh -bs mkTb Rv32iCPU.bsv
 
 后续补充……
 
-### 结果展示
+### <span id="head192"> 结果展示</span>
 
 **仿真**：
 
