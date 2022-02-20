@@ -163,31 +163,31 @@ reg [7:0] rdata = 0;
 assign rdy = (cnt==0) ? 1 : 0;
 
 always @ (posedge clk or negedge rstn)
-	if(!rstn) begin
-		{ss, sck, mosi} <= 3’b111;
-	end else begin
-		if(cnt==0) begin
-			if(en) begin
-				rdata <= data;
-				cnt <= 1;
-			end
-		end else if(cnt==1) begin
-			ss <= 1’b0;               // ss 拉低
-			cnt <= cnt + 1;
-		end else if(cnt<=17) begin
-			sck <= cnt[0];            // cnt 为偶数时，令 sck=0，cnt 为奇数时，令 sck=1。
-			mosi <= rdata[8-(cnt/2)]; // 在 mosi 上产生串行输出
-			cnt <= cnt + 1;
-		end else if(cnt==18) begin
-			mosi <= 1’b1;
-			cnt <= cnt + 1;
-		end else if(cnt==19) begin
-			ss <= 1’b1;               // ss 拉高
-			cnt <= cnt + 1;
-		end else begin
-			cnt <= 0;
-		end
-	end
+    if(!rstn) begin
+        {ss, sck, mosi} <= 3’b111;
+    end else begin
+        if(cnt==0) begin
+            if(en) begin
+                rdata <= data;
+                cnt <= 1;
+            end
+        end else if(cnt==1) begin
+            ss <= 1’b0;               // ss 拉低
+            cnt <= cnt + 1;
+        end else if(cnt<=17) begin
+            sck <= cnt[0];            // cnt 为偶数时，令 sck=0，cnt 为奇数时，令 sck=1。
+            mosi <= rdata[8-(cnt/2)]; // 在 mosi 上产生串行输出
+            cnt <= cnt + 1;
+        end else if(cnt==18) begin
+            mosi <= 1’b1;
+            cnt <= cnt + 1;
+        end else if(cnt==19) begin
+            ss <= 1’b1;               // ss 拉高
+            cnt <= cnt + 1;
+        end else begin
+            cnt <= 0;
+        end
+    end
 ```
 
 以上 Verilog 代码已经是一个很简短的实现了，但可读性很差，难于修改，如果我们想在 `ss` 拉低之前再插入一个时钟周期干其它的事情，则后面的所有状态转移以及 `2≤cnt≤17` 时的奇偶判断都得改，容易改出 bug。
@@ -198,21 +198,21 @@ always @ (posedge clk or negedge rstn)
 // Verilog SPI 发送（testbench 写法，不可综合！！）
 reg signed [31:0] cnt = 7;       // cnt 初始值为 7
 initial begin
-	{ss, sck, mosi} <= 3’b111;
-	@(posedge clk)               // 等到下一个时钟上升沿
-		ss <= 1’b0;              // ss 拉低
-	while(cnt>=0) begin          // while 循环，cnt 从 7 递减到 0，共8次
-		@(posedge clk) begin     // 等到下一个时钟上升沿
-			sck <= 1’b0;         // sck 拉低
-			mosi <= wdata[cnt];  // mosi 依次产生串行 bit
-		end
-		@(posedge clk) begin     // 等到下一个时钟上升沿
-			sck <= 1’b1;         // sck 拉高
-			cnt = cnt - 1;       // cnt 每次循环都递减
-		end
-	end
-	@(posedge clk) mosi <= 1’b1; // mosi 拉高
-	@(posedge clk) ss <= 1’b1;   // ss 拉高，发送结束
+    {ss, sck, mosi} <= 3’b111;
+    @(posedge clk)               // 等到下一个时钟上升沿
+        ss <= 1’b0;              // ss 拉低
+    while(cnt>=0) begin          // while 循环，cnt 从 7 递减到 0，共8次
+        @(posedge clk) begin     // 等到下一个时钟上升沿
+            sck <= 1’b0;         // sck 拉低
+            mosi <= wdata[cnt];  // mosi 依次产生串行 bit
+        end
+        @(posedge clk) begin     // 等到下一个时钟上升沿
+            sck <= 1’b1;         // sck 拉高
+            cnt = cnt - 1;       // cnt 每次循环都递减
+        end
+    end
+    @(posedge clk) mosi <= 1’b1; // mosi 拉高
+    @(posedge clk) ss <= 1’b1;   // ss 拉高，发送结束
 end
 ```
 
@@ -264,14 +264,14 @@ endmodule
 ```verilog
 // 用 BSV 编译器把 BSV 模块转化为 Verilog 后的接口定义
 module mkSPIWriter(          // 这些注释是笔者加上的
-	input  CLK,              // 自动生成的时钟
-	input  RST_N,            // 自动生成的复位
+    input  CLK,              // 自动生成的时钟
+    input  RST_N,            // 自动生成的复位
     // 由 method Action write(Bit#(8) data) 生成的信号
     input  [7:0] write_data, // 对应波形图1中的 data 信号
-	input  EN_write,         // 对应波形图1中的 en 信号（是自动生成的握手信号）
-	output RDY_write,        // 对应波形图1中的 rdy 信号（是自动生成的握手信号）
+    input  EN_write,         // 对应波形图1中的 en 信号（是自动生成的握手信号）
+    output RDY_write,        // 对应波形图1中的 rdy 信号（是自动生成的握手信号）
     // 由 method Bit#(3) spi 生成的信号
-	output [2:0] spi,        // 3bit 分别对应 ss,sck,mosi 信号
+    output [2:0] spi,        // 3bit 分别对应 ss,sck,mosi 信号
 );
 ```
 
@@ -6293,8 +6293,8 @@ endseq
 // 设 regx 是寄存器
 seq
    action        // 这样是可以的：
-   	  int x=0; 
-   	  x = regx; 
+      int x=0; 
+      x = regx; 
       for(int y=0; y<4; y=y+1)
          x = x + y;
       regx <= x;
