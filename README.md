@@ -2,8 +2,6 @@ BSV 中文教程
 ===========================
 欢迎 :hand: 这里(可能)是首个中文 Bluespec SystemVerilog (BSV) 教程。
 
-****
-
 # <span id="head1">1 前言</span>
 
 ## <span id="head2">1.1 为什么要 BSV？Verilog 不好用？</span>
