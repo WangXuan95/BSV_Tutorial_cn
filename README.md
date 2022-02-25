@@ -2,7 +2,14 @@ BSV 中文教程
 ===========================
 欢迎 :hand: 这里(可能)是首个中文 Bluespec SystemVerilog (BSV) 教程。
 
-# <span id="head1">1 前言</span>
+![图1](./readme_image/0.bluespec.png)
+
+同步更新至：
+
+- GitHub : https://github.com/WangXuan95/BSV_Tutorial_cn
+- Gitee : https://gitee.com/wangxuan95/BSV_Tutorial_cn
+
+# 1 前言
 
 ## <span id="head2">1.1 为什么要 BSV？Verilog 不好用？</span>
 BSV 是一门高级硬件描述语言（**H**igh-**L**evel **H**ardware **D**escription **L**anguage, **HL-HDL**），与 Verilog 一样，被用于 FPGA 或 ASIC 的前端设计和验证。BSV 于 2003 年被 Bluespec :tm: 开发，期间一直作为商业收费 :moneybag: 工具而存在，到 2020 年它的编译器才开源，这才给了我们接触它的机会。
@@ -12,12 +19,12 @@ Verilog 的语法简单、特性少，却能全面且精准的描述绝大多数
 > :pushpin: 在笔者看来 BSV 并不能替代 Verilog ——至少现在不能。同样，HLS、SpinalHDL、Chisel 也无法撼动 Verilog 的地位。这就像各种高级语言也没有替代 C 语言一样。一些说法把 Verilog/VHDL 在数字逻辑设计中的地位，比作汇编语言在程序设计中的地位，笔者认为该说法具有误导性。Verilog/VHDL 所在的抽象层次恰到好处，且是通用（跨平台）的——支持各厂家的FPGA和ASIC，因此成为了数字逻辑设计的主流语言，这与 C 语言的理念类似，应当比作 C 语言。
 >
 
-## <span id="head3">1.2 关于本教程</span>
+## 1.2 关于本教程
 
 在开始前，读者要有如下基础：
 
 - 熟悉 Verilog/VHDL ，熟悉数字电路设计，比如状态机、流水线、握手信号、串并转换、单口RAM、双口RAM等知识。
-- 起码要知道软件编程语言中的基本概念：包括类型、分支、循环、数组、函数。
+- 起码要知道软件编程语言中的基本概念：数据类型、分支、循环、数组、函数。
 
 另外，如果有以下知识，学起来会更轻松：
 
@@ -26,26 +33,26 @@ Verilog 的语法简单、特性少，却能全面且精准的描述绝大多数
 
 本教程参考了 《BSV by example》 [1] 这篇很棒的官方教程。但也有很大不同：
 
-* 本教程不是翻译自 [1] 的，符合中文语法习惯，直译原文则会很生硬。
 * 本教程基于开源的 BSV 编译器 bsc，会带读者在命令行中使用编译器。
+* 本教程不是直译自 [1]，而是根据其大纲而重构的，符合中文语法习惯，直译原文则会很生硬。
 * 本教程根据自己的理解，对 [1] 的内容进行删减和重排序。
 * 本教程会讲述一些 [1] 中没有讲，但也很实用的内容，它们来自于内容更全的 BSV 参考指南 [2] 。
-* 本教程的配套代码都是原创，还展示了3个大型项目—— SPIFlash 读写器、RISC-V 流水线 CPU、JPEG 图像压缩器。
+* 本教程在讲解中配套了很多有实际意义的代码，还展示了3个大型项目：SPIFlash读写器、RISC-V流水线CPU、JPEG图像压缩器。
 * 作为实用教程，笔者将讲述 BSV 生成的 Verilog 模块的特性，指导读者把它嵌入 Verilog 项目中。
 
 笔者也是 BSV 初学者，完全凭借对数字逻辑设计的热爱~~用爱发电~~编写了本教程。出现不准确的表述也在所难免，可以提 issue 让笔者改进。
 
-## <span id="head4">1.3 参考资料</span>
+## 1.3 参考资料
 
 [1] R. Nikhil and K. Czeck. BSV by Example: The next-generation language for electronic system design.  Bluespec, Inc. 2010. http://csg.csail.mit.edu/6.S078/6_S078_2012_www/resources/bsv_by_example.pdf.
 
 [2] Bluespec SystemVerilog Reference Guide. Bluespec, Inc. 2017. https://web.ece.ucsb.edu/its/bluespec/doc/BSV/reference-guide.pdf.
 
-- 是 BSV 最全的官方资料，阅读完本教程后，可作为查阅文档。
+- [2] 是内容最全 BSV 的官方资料，可作为查阅文档。
 
 
 
-## <span id="head5">1.4 目录 :page_with_curl:</span>
+## 目录 :page_with_curl:
 
 - [2 BSV概览](#head6)
 	- [2.1 BSV vs. Verilog](#head7)
@@ -74,7 +81,6 @@ Verilog 的语法简单、特性少，却能全面且精准的描述绝大多数
 	- [5.8 Maybe 类型](#head46)
 - [6 时序逻辑电路](#head47)
 	- [6.1 寄存器 Reg](#head48)
-		- [e.g. 开平方计算流水线 v1](#head51)
 	- [6.2 读写顺序与调度注解](#head52)
 	- [6.3 线网 Wire](#head53)
 	- [6.4 规则 rule](#head59)
@@ -83,7 +89,10 @@ Verilog 的语法简单、特性少，却能全面且精准的描述绝大多数
 - [7 模块与接口](#head76)
 	- [7.1 模块层次结构](#head77)
 	- [7.2 值方法与动作方法](#head80)
+		- [e.g. 比特编码器 v1](#head83)
 	- [7.3 方法的隐式条件](#head84)
+		- [e.g. 比特编码器 v2](#head86)
+		- [e.g. 比特编码器 v3](#head88)
 	- [7.4 动作值方法](#head89)
 		- [e.g. 比特编码器 v4](#head90)
 	- [7.5 方法实现的简写](#head91)
@@ -98,7 +107,6 @@ Verilog 的语法简单、特性少，却能全面且精准的描述绝大多数
 - [8 存储与队列](#head100)
 	- [8.1 BRAMCore](#head101)
 	- [8.2 BRAM](#head106)
-		- [e.g. 矩阵转置](#head113)
 	- [8.3 队列 FIFO 概览](#head114)
 	- [8.4 常规 FIFO](#head115)
 		- [e.g. 开平方计算流水线 v2](#head118)
@@ -121,6 +129,8 @@ Verilog 的语法简单、特性少，却能全面且精准的描述绝大多数
 	- [10.1 多态中的基本概念](#head143)
 	- [10.2 多态函数举例](#head148)
 	- [10.3 多态模块举例](#head149)
+		- [e.g. 自定义更多的寄存器](#head150)
+		- [e.g. 自定义双缓冲模块](#head151)
 - [11 状态机 StmtFSM](#head152)
 	- [11.1 基本的构建和使用方法](#head153)
 	- [11.2 执行结构](#head156)
@@ -163,31 +173,31 @@ reg [7:0] rdata = 0;
 assign rdy = (cnt==0) ? 1 : 0;
 
 always @ (posedge clk or negedge rstn)
-    if(!rstn) begin
-        {ss, sck, mosi} <= 3’b111;
-    end else begin
-        if(cnt==0) begin
-            if(en) begin
-                rdata <= data;
-                cnt <= 1;
-            end
-        end else if(cnt==1) begin
-            ss <= 1’b0;               // ss 拉低
-            cnt <= cnt + 1;
-        end else if(cnt<=17) begin
-            sck <= cnt[0];            // cnt 为偶数时，令 sck=0，cnt 为奇数时，令 sck=1。
-            mosi <= rdata[8-(cnt/2)]; // 在 mosi 上产生串行输出
-            cnt <= cnt + 1;
-        end else if(cnt==18) begin
-            mosi <= 1’b1;
-            cnt <= cnt + 1;
-        end else if(cnt==19) begin
-            ss <= 1’b1;               // ss 拉高
-            cnt <= cnt + 1;
-        end else begin
-            cnt <= 0;
-        end
-    end
+	if(!rstn) begin
+		{ss, sck, mosi} <= 3’b111;
+	end else begin
+		if(cnt==0) begin
+			if(en) begin
+				rdata <= data;
+				cnt <= 1;
+			end
+		end else if(cnt==1) begin
+			ss <= 1’b0;               // ss 拉低
+			cnt <= cnt + 1;
+		end else if(cnt<=17) begin
+			sck <= cnt[0];            // cnt 为偶数时，令 sck=0，cnt 为奇数时，令 sck=1。
+			mosi <= rdata[8-(cnt/2)]; // 在 mosi 上产生串行输出
+			cnt <= cnt + 1;
+		end else if(cnt==18) begin
+			mosi <= 1’b1;
+			cnt <= cnt + 1;
+		end else if(cnt==19) begin
+			ss <= 1’b1;               // ss 拉高
+			cnt <= cnt + 1;
+		end else begin
+			cnt <= 0;
+		end
+	end
 ```
 
 以上 Verilog 代码已经是一个很简短的实现了，但可读性很差，难于修改，如果我们想在 `ss` 拉低之前再插入一个时钟周期干其它的事情，则后面的所有状态转移以及 `2≤cnt≤17` 时的奇偶判断都得改，容易改出 bug。
@@ -198,21 +208,21 @@ always @ (posedge clk or negedge rstn)
 // Verilog SPI 发送（testbench 写法，不可综合！！）
 reg signed [31:0] cnt = 7;       // cnt 初始值为 7
 initial begin
-    {ss, sck, mosi} <= 3’b111;
-    @(posedge clk)               // 等到下一个时钟上升沿
-        ss <= 1’b0;              // ss 拉低
-    while(cnt>=0) begin          // while 循环，cnt 从 7 递减到 0，共8次
-        @(posedge clk) begin     // 等到下一个时钟上升沿
-            sck <= 1’b0;         // sck 拉低
-            mosi <= wdata[cnt];  // mosi 依次产生串行 bit
-        end
-        @(posedge clk) begin     // 等到下一个时钟上升沿
-            sck <= 1’b1;         // sck 拉高
-            cnt = cnt - 1;       // cnt 每次循环都递减
-        end
-    end
-    @(posedge clk) mosi <= 1’b1; // mosi 拉高
-    @(posedge clk) ss <= 1’b1;   // ss 拉高，发送结束
+	{ss, sck, mosi} <= 3’b111;
+	@(posedge clk)               // 等到下一个时钟上升沿
+		ss <= 1’b0;              // ss 拉低
+	while(cnt>=0) begin          // while 循环，cnt 从 7 递减到 0，共8次
+		@(posedge clk) begin     // 等到下一个时钟上升沿
+			sck <= 1’b0;         // sck 拉低
+			mosi <= wdata[cnt];  // mosi 依次产生串行 bit
+		end
+		@(posedge clk) begin     // 等到下一个时钟上升沿
+			sck <= 1’b1;         // sck 拉高
+			cnt = cnt - 1;       // cnt 每次循环都递减
+		end
+	end
+	@(posedge clk) mosi <= 1’b1; // mosi 拉高
+	@(posedge clk) ss <= 1’b1;   // ss 拉高，发送结束
 end
 ```
 
@@ -261,17 +271,17 @@ endmodule
 
 最后，你还会注意到这个 BSV 代码中看不出模块输入输出信号的定义。因为 BSV 将它们封装成了**方法** (method)。以上述代码中的方法`method Action write` 为例，当外部需要启动 SPI 发送时就调用此方法。参数 `Bit#(8) data` 是待发送的字节，会映射为 Verilog 中的一个 8 位的输入信号，而握手信号 en 和 rdy 会自动生成（如下 :point_down: ）。当 `spiFsm` 状态机正忙（即正在发送SPI时）时，对 `method Action write` 的调用将无法生效；用 Verilog 的思维来讲：此时 `rdy=0`，即使 `en=1` 也无法发送数据。
 
-```verilog
+```bsv
 // 用 BSV 编译器把 BSV 模块转化为 Verilog 后的接口定义
 module mkSPIWriter(          // 这些注释是笔者加上的
-    input  CLK,              // 自动生成的时钟
-    input  RST_N,            // 自动生成的复位
+	input  CLK,              // 自动生成的时钟
+	input  RST_N,            // 自动生成的复位
     // 由 method Action write(Bit#(8) data) 生成的信号
     input  [7:0] write_data, // 对应波形图1中的 data 信号
-    input  EN_write,         // 对应波形图1中的 en 信号（是自动生成的握手信号）
-    output RDY_write,        // 对应波形图1中的 rdy 信号（是自动生成的握手信号）
+	input  EN_write,         // 对应波形图1中的 en 信号（是自动生成的握手信号）
+	output RDY_write,        // 对应波形图1中的 rdy 信号（是自动生成的握手信号）
     // 由 method Bit#(3) spi 生成的信号
-    output [2:0] spi,        // 3bit 分别对应 ss,sck,mosi 信号
+	output [2:0] spi,        // 3bit 分别对应 ss,sck,mosi 信号
 );
 ```
 
@@ -323,8 +333,9 @@ Chisel 和 SpinalHDL 也可以归类为高级硬件描述语言（HL-HDL）。�
 * Linux 实体机 :computer:
 * Linux 虚拟机
 * Windows10 bash (**W**indows **S**ubsystem of **L**inux, **WSL**)，强烈推荐 :raised_hands: ！！WSL 的开启方法可以参考：
-* Install WSL：https://docs.microsoft.com/en-us/windows/wsl/install
-* win10开启wsl，让我们愉快的使用Linux：https://zhuanlan.zhihu.com/p/384026893
+  * Install WSL：https://docs.microsoft.com/en-us/windows/wsl/install
+  * win10开启wsl，让我们愉快的使用Linux：https://zhuanlan.zhihu.com/p/384026893
+
 
 
 > :point_right: 提示：开启 WSL 后，在 Windows 的某个目录（文件夹）下打开 WSL 命令行的方式是：在”文件资源管理器“空白处摁住shift+右键 → ”在此处打开 PowerShell 窗口“ → 在 PowerShell 中输入 wsl + 回车 → 即可进入 Linux 环境。
@@ -601,7 +612,7 @@ endmodule
 
 module mkTb ();                        // 模块名 mkTb ，调用者
    DecCounter counter <- mkDecCounter; // 例化一个 mkDecCounter，并拿到它的接口，叫做 counter
-
+   
    // counter.count ...                // 通过接口名 counter 来调用子模块，比如调用 count 方法
 endmodule
 ```
@@ -810,7 +821,7 @@ bit a = 'b1;    // 等效于 Bit#(1) a = 'b1
 
 `Bit#(8)` 类似 Verilog 中的 `wire [7:0]` ，不同之处在于：Verilog 的位宽检查很宽松，允许隐式的高位截断和扩展（虽然会报编译时 Warning），而 Verilog 的显式的截断和扩展写起来很不优雅：
 
-```verilog
+```bsv
 // 这是 Verilog !! 不是 BSV !!
 wire [ 6:0] t1 = 7'h12;
 wire [11:0] t2 = t1;         // 隐式零扩展，会报编译时 Warning
@@ -831,7 +842,7 @@ Bit#(4)  t5 = truncate(t1);  // 显式截断，自动根据左值（4位）判�
 
 > :pushpin: 后续我们会学到 Bit#(n) 是一个多态类型（泛型），而 Bit#(7) 和 Bit#(4) 完全不是一种数据类型，这也解释了为什么 BSV 必须进行显式截断和扩展。
 
-用常数对 `Bit#(n)`  类型的变量进行赋值时，和 Verilog 类似，可以用二进制、十进制或十六进制表示常数，举例如下 :point_down:
+用常数对 `Bit#(n)`  类型的变量进行赋值时，和 Verilog 类似，可以用二进制、十进制或十六进制表示常数，举例如下 :point_down: 
 
 ```bsv
 Bit#(7)  t1 = 7'b0010111;   // 二进制，位宽匹配
@@ -939,7 +950,7 @@ module mkTb();
       Int#(8)   i1 = unpack(pack(u1));  //把u1转换成有符号数i1，会得到十进制的 -5
       $display("%d", u1 > 2);           //无符号比较，打印 1，显然 250 > 2 成立
       $display("%d", i1 > 2);           //有符号比较，打印 0，显然 -5 > 2 不成立
-
+    
       UInt#(16) u2 = extend(u1);        //u1零扩展
       Int#(16)  i2 = extend(i1);        //i1符号扩展
       $display("u2=%x", u2);            //打印 u2=00fa, 因为 fa   零扩展得到 00fa
@@ -955,7 +966,7 @@ endmodule
 
 `Bool` 类型只有两种取值：`True` 和 `False` 。
 
-虽然 `Bool` 底层是用 1 比特实现的，但 `Bool` 类型与 `bit` 类型不能混淆，它们之间可以用 `pack` 和 `unpack` 互相转化。
+虽然 `Bool` 底层是用 1 比特实现的，但 `Bool` 类型与 `bit` 类型不能混淆，它们之间可以用 `pack` 和 `unpack` 互相转化。 
 
 ```bsv
 Bool b1 = True;
@@ -1067,7 +1078,7 @@ $display("a=%d   b=%3d   c=%08x   d=%x   e=%b", a, b, c, d, e );
 
 ### <span id="head36"> 变量定义</span>
 
-变量定义的格式是：
+变量定义的格式是： 
 
 ```
 类型名 变量名;
@@ -1099,10 +1110,10 @@ BSV 有两种赋值符号：
 - 值赋值 (`=`) ：左边的变量（左值）被绑定到右边的值（右值），成为右值的一个副本。
 
 - 副作用赋值 (`<-`) ：右值会引起副作用，包括实例化了一个硬件实体、或引起了硬件状态（寄存器、触发器）的变化。例如：
+  - 实例化了一个模块并用 `<-` 获得其接口；
 
-- 实例化了一个模块并用 `<-` 获得其接口；
+  - 调用一个动作值方法 (ActionValue method) 并用  `<-` 获得其返回值（后续7.4节会细讲）。
 
-- 调用一个动作值方法 (ActionValue method) 并用  `<-` 获得其返回值（后续7.4节会细讲）。
 
 在 5.2 节的各种例子里，我们一直用的是值赋值 (`=`) ，因为它仅仅是把表达式的值赋给了左值，没有实例化硬件实体，也没有引起硬件状态变化。
 
@@ -1112,10 +1123,10 @@ BSV 有两种赋值符号：
 module mkTb();
    Reg#(int) ra <- mkReg(0);  // 1. 定义一个 Reg#(int) 类型的接口变量 ra 。
                               //    mkReg(0) 实例化一个初值=0的寄存器，ra 拿到了该寄存器的接口
-
+   
    Reg#(int) rb = ra;         // 2. 定义一个 Reg#(int) 类型的接口变量 rb 。
                               //    并没有实例化寄存器，而是让 rb 成为 ra 的别名
-
+   
    Reg#(int) rc <- mkReg(0);  // 3. 定义一个 Reg#(int) 类型的接口变量 rc 。
                               //    mkReg(0) 实例化一个初值=0的寄存器，rc 拿到了该寄存器的接口
 
@@ -1185,7 +1196,7 @@ module mkTb ();
    let sub <- mkSub;   // 可以用 let
                        // mkSub 一定会获得 Sub 类的接口，无歧义
                        // 等效于 Sub sub <- mkSub;
-
+   
 // let ra <- mkReg(0); // 不能用 let !!!
                        // 不知道 mkReg 会获得 Reg#(int) 还是 Reg#(bit) 还是 Reg#(UInt#(8)) 之类的接口
                        // 这里要用完整类型名，比如 Reg#(bit) <- mkReg(0);
@@ -1336,14 +1347,14 @@ module mkTb ();
    function Bit#(6) binary2gray(Bit#(6) value);   // 输入参数：Bit#(6) ，返回 Bit#(6)
       return (value >> 1) ^ value;
    endfunction
-
+   
    // 函数：把格雷码转化为二进制编码
    function Bit#(6) gray2binary(Bit#(6) value);   // 输入参数：Bit#(6) ，返回 Bit#(6)
       for(int i=4; i>=0; i=i-1)
          value[i] = value[i] ^ value[i+1];
       return value;
    endfunction
-
+   
    //...
 ```
 
@@ -1376,7 +1387,7 @@ import GrayCode_v5::*;
 
 ## <span id="head45">5.7 元组 Tuple</span>
 
-元组相关的代码见 `src/5.TupleTest/TupleTest.bsv`
+元组相关的代码见 `src/5.TupleTest/TupleTest.bsv` 
 
 元组是把多个类型的变量放在一起的复合数据类型， BSV 预定义了二元组、三元组、四元组、……、八元组。
 
@@ -1446,12 +1457,13 @@ Maybe#(Int#(9)) value2 = tagged Valid 42;   // 有效，取值为 42
 BSV 针对 `Maybe#(td)` 类型提供了两个函数：
 
 - `isValid(x)` :  接受 `Maybe#(td)` 类型的变量 `x` 作为参数：
-- `x` 无效则返回 False
-- `x` 有效则返回 True
+  - `x` 无效则返回 False 
+  - `x` 有效则返回 True
 
 - `fromMaybe(dv, x)` :  接受 `td` 类型的变量 `dv` 和 `Maybe#(td)` 类型的变量 `x` 作为参数：
-- `x` 无效则返回 `dv`
-- `x` 有效则返回 `x` 中的取值。
+  - `x` 无效则返回 `dv` 
+  - `x` 有效则返回 `x` 中的取值。
+
 
 
 使用例：
@@ -1475,7 +1487,7 @@ let d2 = fromMaybe(-99, value2);    // 得到 d2 是 Int#(9) 类型的 42
 
 寄存器是一类用于保存数据（或者叫保存电路状态）的模块。本节涉及：
 
-- 接口`Reg#()` 以及其配套的模块 `mkReg` 、 `mkRegU` 、 `mkDReg`
+- 接口`Reg#()` 以及其配套的模块 `mkReg` 、 `mkRegU` 、 `mkDReg` 
 
 ### <span id="head49">mkReg 和 mkRegU</span>
 
@@ -1512,12 +1524,12 @@ module mkReg#(td v) (Reg#(td))  // 第一个括号里是模块参数，是一个
 ```bsv
    module mkTb ();
       Reg#(int) x <- mkReg(23);
-
+      
       rule up_counter;              // rule 每时钟周期都会执行一次
          x._write( x._read + 1 );   // 寄存器的x的值先读出来，+1后再写回去
          $display ("x=%d", x._read );
       endrule
-
+      
       rule done (x >= 26);          // 只有满足条件 x >= 26 的时钟周期才会执行退出
          $finish;
       endrule
@@ -1562,7 +1574,7 @@ module mkTb ();
       cnt <= cnt + 1;
      if(cnt > 9)  $finish;
    endrule
-
+   
    Reg#(int) reg1 <- mkReg(99);   // reg1 初值  = 99
    Reg#(int) reg2 <- mkDReg(99);  // reg2 默认值 = 99
 
@@ -1603,10 +1615,10 @@ cnt=10    reg1=-9    reg2=-9
 
 ```python
 # Python 实现整数开方
-#实现的效果： y = sqrt(x)
+# 效果： y = sqrt(x)
 x = 114514                      # 输入数据
 y = 0                           # 待计算的开方结果
-for n in range(15, -1, -1):     # 迭代 16 次，迭代变量 n=15,14,13,...,2,1,0
+for n in range(15, -1, -1):     # 迭代 16 次，迭代变量 n=15,14,13,...,2,1,0 
     t = (y<<1<<n) + (1<<n<<n)   # 迭代体
     if x >= t:                  # 迭代体
         x -= t                  # 迭代体
@@ -1843,7 +1855,7 @@ endinterface
 
 以下语句实例化一个 `mkDWire` ，其中的数据类型是 `int`，指定它的默认值是 `42` ：
 
-```bsv
+```
 Wire#(int) <- mkDWire(42);
 ```
 
@@ -1862,7 +1874,7 @@ module mkTb ();
 
    Wire#(int) w1 <- mkDWire(99);  // w1 默认值 = 99
    Reg#(int)  r1 <- mkReg(99);    // r1 初始值 = 99
-
+   
    rule test1 (cnt%2 == 0);     // rule条件：只在能整除2的周期激活
       w1 <= cnt;
    endrule
@@ -1927,7 +1939,7 @@ module mkTb ();
 
    Wire#(int) w1 <- mkWire;
    Wire#(int) w2 <- mkWire;
-
+   
    rule test1 (cnt%2 == 0);     // rule条件：只在能整除2的周期激活
       $display("cnt=%1d  test1", cnt);
       w1 <= cnt;
@@ -2039,7 +2051,7 @@ module mkTb ();
 
    RWire#(int) w1 <- mkRWire;    // w1 是个 RWire
    PulseWire w2 <- mkPulseWire;  // w2 是个 PulseWire
-
+   
    rule test1 (cnt%2 == 0);     // rule条件：只在能整除2的周期激活
       w1.wset(cnt);
    endrule
@@ -2253,7 +2265,7 @@ r1
    endrule
 ```
 
-编译器会分析以上代码：
+编译器会分析以上代码： 
 
 - 如果把 `x2y` 排在 `y2x` 前面，则不能满足 y.\_read **SB** y.\_write
 - 如果把 `y2x` 排在 `x2y` 前面，则不能满足 x.\_read **SB** x.\_write
@@ -2378,7 +2390,7 @@ module mkTb ();
    Reg#(int) y <- mkReg(2);
 
    (* descending_urgency = "y2x, x2y" *)
-   rule x2y;
+   rule x2y;     
       y <= x + 1;          // 读 x，写 y
    endrule
    rule y2x (cnt<3);       // 显式条件 cnt<3
@@ -2392,7 +2404,7 @@ endmodule
 
 编译时，不再报任何 Warning ，因为 `y2x` 只在 `cnt<3` 时激活，而 `x2y` 会在 `y2x` 不激活时激活。
 
-仿真打印如下 ，显然，在  `cnt<3`  时，执行的是 `x<=y+1;`  ，在   `cnt>=3`  时，执行的是  `y<=x+1;`
+仿真打印如下 ，显然，在  `cnt<3`  时，执行的是 `x<=y+1;`  ，在   `cnt>=3`  时，执行的是  `y<=x+1;` 
 
 ```
 cnt=0  x=1  y=2
@@ -2425,7 +2437,7 @@ module mkTb ();
 
    (* descending_urgency = "y2x, x2y" *)
 
-   rule x2y;
+   rule x2y;     
       y <= x + 1;       // 读 x，写 y
    endrule
    rule y2x;
@@ -2477,10 +2489,10 @@ cnt=6  x=4  y=5
 // 代码路径：src/9.RuleUrgency/Test4.bsv (部分)
    (* descending_urgency = "y2x, x2y" *)
 
-   rule x2y;
+   rule x2y;     
       y <= x + 1;          // 读 x，写 y
    endrule
-
+   
    rule y2x;
       if(cnt < 3)          // if 语句 cnt<3
          x <= y + 1;       // 读 y，写 x
@@ -2520,7 +2532,7 @@ Warning: "Test5.bsv", line 16, column 9: (G0021)
 // 代码路径：src/10.RuleNoConflict/MutuallyExclusive.bsv (部分)
    Reg#(Bit#(32)) cnt <- mkReg(1);  // cnt 初始值 = 'b0001
    rule shift_counter;
-      cnt <= cnt << 1;              // cnt 每周期左移1 ，这样 cnt 的变化规律是 'b0001 -> 'b0010 -> 'b0100
+      cnt <= cnt << 1;              // cnt 每周期左移1 ，这样 cnt 的变化规律是 'b0001 -> 'b0010 -> 'b0100 
       if(cnt > 10) $finish;
    endrule
 
@@ -2600,7 +2612,7 @@ Warning: "MutuallyExclusive.bsv", line 3, column 8: (G0010)
 
 以上代码中，规则 `test1` 和 `test2` 在每周期都激活，但因为 if 语句的条件互斥，它们中会引起**排序冲突**的语句不会同时执行。假设我们希望的结果是：
 
--  `cnt<3` 时能执行 `x<=x+1;` ， `cnt>3` 时能执行 `x<=x-1;`
+-  `cnt<3` 时能执行 `x<=x+1;` ， `cnt>3` 时能执行 `x<=x-1;` 
 - 所有周期都能执行 `y<=y+1;`
 - 所有周期都能执行 `z<=z+2;`
 
@@ -2724,7 +2736,7 @@ x=2  y=6  z=12
 
 ```bsv
 (* preempts = "(r1, r2), r3" *)
-// 等效于 (* preempts = "r1, r3" *)
+// 等效于 (* preempts = "r1, r3" *) 
 //       (* preempts = "r2, r3" *)
 ```
 
@@ -2926,7 +2938,7 @@ module mkTb ();
       cnt <= cnt + 1;
       if(cnt > 32) $finish;
    endrule
-
+   
    Reg#(int) creg [3] <- mkCReg(3, 0);
 
    rule rule_test5 (cnt%5 == 0);     // 每5周期执行一次
@@ -2947,7 +2959,7 @@ module mkTb ();
 endmodule
 ```
 
-仿真打印如下 :point_down:
+仿真打印如下 :point_down: 
 
 ```
 cnt=23    creg= 0
@@ -2965,14 +2977,14 @@ cnt=33    creg=10
 
 可以看到，在 `cnt=24` 的周期，`creg` 增加了 `2` （下一周期才能读到），这是因为 `rule_test3` 和 `rule_test2` 都执行了，相当于该周期执行了两次 `+1`：
 
-```bsv
+```
 creg[1] <= creg[1] + 1;
 creg[2] <= creg[2] + 1;
 ```
 
 同理，在 `cnt=30` 的周期，`creg` 增加了 `3`，因为相当于执行了三次 `+1` ：
 
-```bsv
+```
 creg[0] <= creg[0] + 1;
 creg[1] <= creg[1] + 1;
 creg[2] <= creg[2] + 1;
@@ -2980,7 +2992,7 @@ creg[2] <= creg[2] + 1;
 
 :pushpin: 注意：因为 `$display("cnt=%2d    creg0=%2d", cnt, creg[0]);` 打印的是 `creg[0]` ，所以只能读到上周期得到的最终值。如果想读到 `creg` 本周期更新后的最新值，可以再多加一个接口：
 
-```bsv
+```
 Reg#(int) creg [4] <- mkCReg(4, 0);
 ```
 
@@ -2995,7 +3007,7 @@ module mkTb ();
       cnt <= cnt + 1;
       if(cnt > 32) $finish;
    endrule
-
+   
    Reg#(int) creg [4] <- mkCReg(4, 0);  // 修改!!：新增一个接口
 
    rule rule_test5 (cnt%5 == 0);     // 每5周期执行一次
@@ -3052,7 +3064,7 @@ cnt=33    creg=11
 
 - `mkM1` 被实例化了2次，一次是在 `mkM3` 种，一次是在 `mkM2` 中。
 - 尽管 `mkM3` 的接口是 Empty ，但它仍然能被 `mkTop` 实例化。
-- 顶层模块名是 `mkTop` ，但是没有任何模块调用它。当进行仿真时，用命令 `bsvbuild.sh -bs mkTop mkTop.bsv` 相当于指定了 `mkTop` 作为顶层模块，那么它在仿真中的实例名就是默认的 `Top`
+- 顶层模块名是 `mkTop` ，但是没有任何模块调用它。当进行仿真时，用命令 `bsvbuild.sh -bs mkTop mkTop.bsv` 相当于指定了 `mkTop` 作为顶层模块，那么它在仿真中的实例名就是默认的 `Top` 
 
 | ![图6](./readme_image/6.module_hierarchy.png) |
 | :-----------------------------------------: |
@@ -3191,10 +3203,12 @@ endmethod
 
 - **输入码**：每周期可输入 8bit 数据 din ，或者也可以选择不输入（空闲）。
 - 计算**长度码**：寻找 din 左起第一个 =1 的 bit ，用该 bit 所在的下标作为长度码 len。存在一种特例：
-- 当 din=8'h0 时，len=3'd0
+  - 当 din=8'h0 时，len=3'd0
+
 - 计算**数据码**：取输入数据的低 len 个 bit 作为数据码 trim 。存在两种特例：
-- 当 din=8'h0 时，trim=1'b0
-- 当 din=8'h1 时，trim=1'b1
+  - 当 din=8'h0 时，trim=1'b0 
+  - 当 din=8'h1 时，trim=1'b1
+
 - 拼接**生成码**：令 trim 在高位，len 在低位，进行拼接，得到生成码 code
 - 更新**遗留码**，产生**输出数据**：把 code 拼接在上一周期的遗留码 drem 上，拼接后如果长度 >=16 ，就把低 16bit 作为输出码 dout 输出，drem 则删去这低 16bit 。
 
@@ -3238,7 +3252,7 @@ function Tuple2#(Bit#(10), UInt#(4)) getCode(Bit#(8) din);
    for(UInt#(4) i=0; i<8; i=i+1)
       if(din[i] == 1)
          len = i;
-
+   
    // 计算数据码 trim 的长度
    UInt#(4) trim_len = len>0 ? len : 1;
 
@@ -3260,7 +3274,7 @@ endfunction
 module mkBitCoder (BitCoder);
    // 流水线第一级产生的数据，默认 code 和 code 的长度都是 0
    Reg#(Tuple2#(Bit#(10), UInt#(4))) in_code_and_len <- mkDReg( tuple2(0,0) );   // code 和 code 的长度
-
+   
    // 流水线第二级产生的数据
    Reg#(Bit#(31)) drem       <- mkReg(0);        // 存放遗留码
    Reg#(UInt#(5)) drem_len   <- mkReg(0);        // 遗留码的长度
@@ -3269,7 +3283,7 @@ module mkBitCoder (BitCoder);
 
    // 流水线第二级：更新遗留数据和输出数据
    rule get_drem_and_dout;
-      match {.code, .code_len} = in_code_and_len;   // 当流水线上一级没有数据时，mkDReg 默认读到 0
+      match {.code, .code_len} = in_code_and_len;   // 当流水线上一级没有数据时，mkDReg 默认读到 0 
                                                     // 不会对本 rule 造成副作用
 
       Bit#(31) data = (extend(code) << drem_len) | drem;   // data = code 拼接 drem
@@ -3301,7 +3315,7 @@ endmodule
 - 流水线第一级实现在 `put` 方法中，负责调用 `getCode` 函数计算 code 和 code 的长度。
 - 流水线第一级使用名为 `in_code_and_len` 、默认值为 `tuple2(0,0)` 的 `mkDReg` 向第二级传递一项数据，只有当 `put` 方法执行的下一个周期， `in_code_and_len` 才能读到非零的 code 和 code 的长度。
 - 流水线第二级使用名为 `dout_valid` 、默认值为 `False` 的 `mkDReg` 传递输出有效信号，只有当有足够的 16bit 需要输出时，才让 `dout_valid=True` 。
-- 输出级，用 `get_valid` 方法引出 `dout_valid` 的值；用 `get` 方法引出 `dout` 的值。
+- 输出级用 `get_valid` 方法引出 `dout_valid` 的值；用 `get` 方法引出 `dout` 的值。
 
 最后，编写 testbench （测试程序）如下 :point_down: ，它实例化了模块 `mkBitCoder` ，实例名为 `coder` 。它调用 `coder.put` 方法依次输入 `8'h0` \~ `8'hFF` ，一共输入两轮。并在 `coder.get_valid = True` 时打印 `coder.get` 方法的值。
 
@@ -3420,7 +3434,7 @@ endmodule
 ```
        |-----------------------|              |--------------------------|
        |                       |  (传递10bit)  |   drem容量：31bit         |
-put--->| 如果put，最多产生10bit  |------------->| 当前含有 drem_len 个 bit   |---> dout
+put--->| 如果put，最多产生10bit  |------------->| 当前含有 drem_len 个 bit   |---> dout 
        |                       |              |                          |    (可输出8bit)
        |-----------------------|              |--------------------------|
                流水线第一级                               流水线第二级
@@ -3481,7 +3495,7 @@ module mkBitCoder (BitCoder);
    // 流水线第一级产生的数据，默认 code 和 code 的长度都是 0
    Reg#(Tuple2#(Bit#(10), UInt#(4))) in_code_and_len <- mkReg( tuple2(0,0) );   // code 和 code 的长度
    Reg#(Bool)    din_valid  <- mkReg(False);    // 指示 in_code_and_len 是否有效
-
+   
    // 流水线第二级产生的数据
    Reg#(Bit#(31)) drem      <- mkReg(0);        // 存放遗留码
    Reg#(UInt#(6)) drem_len  <- mkReg(0);        // 遗留码的长度
@@ -3516,7 +3530,7 @@ module mkBitCoder (BitCoder);
 
    // 流水线第一级：获取 code 以及其长度
    method Action put(Bit#(8) din) if(!din_valid);   // 隐式条件保证下一周期 drem 的长度不会溢出
-      din_valid <= True;
+      din_valid <= True; 
       in_code_and_len <= getCode(din);              // 计算 code 和 code 的长度
    endmethod
 
@@ -3531,7 +3545,7 @@ endmodule
 
 这里使用了一种很具有 BSV 特色的写法——在方法 `put` 和规则 `get_drem_and_dout` 里都写了寄存器  `din_valid` 。虽然二者能同时激活，但由于发生冲突的语句在 if 条件的控制下并不会在同一周期执行，所以用 `conflict_free` 调度属性来避免它们之间的激活抑制：
 
-```bsv
+```
 (* conflict_free = "put, get_drem_and_dout" *)
 ```
 
@@ -3664,9 +3678,9 @@ endmodule
 
 我们知道接口 `Reg#(int)` 有两个方法：
 
--  `method Action _write(int x)`
+-  `method Action _write(int x)` 
 
--  `method int _read`
+-  `method int _read` 
 
 我们本可以直接用上一节的写法实现它们：
 
@@ -3772,7 +3786,7 @@ endmodule
 // 代码路径：src/14.IncreaseReg/IncreaseRegCfg_v2.bsv （部分）
 module mkIncreaseRegCfg ( Tuple2#(Reg#(int), Reg#(int)) ); // 该模块的接口是元组，包括两个 Reg#(int) 接口
    Reg#(int) reg_data <- mkReg(0);
-   Reg#(int) reg_step <- mkReg(1);
+   Reg#(int) reg_step <- mkReg(1); 
 
    (* preempts = "fst._write, increase" *)   // fst 代表元组第一个元素（也就是自增计数器寄存器的接口）
                                              // fst._write 自然就代表自增计数器的 _write 方法。
@@ -3879,10 +3893,10 @@ endinterface
 BRAMCore 包提供了 `mkBRAMCore1` 模块用来创建单口 RAM， `mkBRAMCore2` 模块用来创建双口 RAM 。它们的定义是：
 
 ```bsv
-// 单口 RAM
+// 单口 RAM 
 module mkBRAMCore1#(Integer memSize, Bool hasOutputRegister) (BRAM_PORT#(addr, data))
 
-// 双口 RAM
+// 双口 RAM 
 module mkBRAMCore2#(Integer memSize, Bool hasOutputRegister) (BRAM_DUAL_PORT#(addr, data))
 ```
 
@@ -3947,7 +3961,7 @@ mkBRAMCore1Load 和 mkBRAMCore2Load 模块在仿真开始时用一个文本文�
 // 单口 RAM , 载入文件作为初始数据
 module mkBRAMCore1Load#(Integer memSize, Bool hasOutputRegister, String file, Bool binary )
    (BRAM_PORT#(addr, data))
-
+   
 // 双口 RAM ，载入文件作为初始数据
 module mkBRAMCore2Load#(Integer memSize, Bool hasOutputRegister, String file, Bool binary )
    (BRAM_DUAL_PORT#(addr, data))
@@ -3955,7 +3969,7 @@ module mkBRAMCore2Load#(Integer memSize, Bool hasOutputRegister, String file, Bo
 
 其中 `String file` 是文本文件名字符串，是相对于 .bsv 源码文件所在的路径。例如：
 
-- 文本文件 data.txt 与 .bsv 文件在同一个目录下，那么 `String file` 应该取 `"data.txt"`
+- 文本文件 data.txt 与 .bsv 文件在同一个目录下，那么 `String file` 应该取 `"data.txt"` 
 - 文本文件 hello.txt 在 .bsv 文件所在的目录下的 test 目录下，那么 `String file` 应该取 `"test/hello.txt"`
 
 `Bool binary=True` 代表文件由二进制数组成。以下是一个二进制文本文件内容的示例，每行一项数据，载入后，每项数据会占用 BRAM 的一个地址。
@@ -4122,9 +4136,11 @@ int rdata <- ram2.portB.response.get;    // 动作值方法
 BRAM 具有一个读数据和写响应的缓存队列（一般我们不用写响应，所以简称读缓存队列）。每次调用 `request.put` 发起一个读操作，相当于向读缓存压入了一项数据；每次调用 `response.get` 相当于从读缓存中拿出了一项数据。因此：
 
 - 只有当缓存不为空时，`response.get` 的隐式条件才满足
-- 换言之，如果不发起 `request.put` 读操作，就不能从 `response.get` 拿到数据
+  - 换言之，如果不发起 `request.put` 读操作，就不能从 `response.get` 拿到数据
+
 - 只有当缓存不为满时， `request.put` 的隐式条件才满足
-- 换言之，如果不及时调用 `response.get` 把数据拿走，当读缓存满时，就无法调用 `request.put` 了
+  - 换言之，如果不及时调用 `response.get` 把数据拿走，当读缓存满时，就无法调用 `request.put` 了
+
 
 注意：以上叙述都是指相同的口。而双口 RAM 的 A口 和 B口是完全独立的，各自有各自的读缓存，互不影响。
 
@@ -4193,7 +4209,7 @@ BRAM2Port#( Tuple3#(bit, UInt#(3), UInt#(3)) , int ) ram <- mkBRAM2Server(defaul
 method Action datain(int val) if(!full);           // 外界调用该方法，输入待转置(行主序)的数据流
    ram.portA.request.put(
       BRAMRequest{write: True, responseOnWrite: False, address: tuple3(wb[0], wi, wj), datain: val });
-
+   
    // ------------ 按行主序的方式移动指针 ------------
    wj <= wj + 1;         // 列号先增加
    if(wj == 7) begin     // 列号到最大时
@@ -4239,8 +4255,9 @@ endmethod
 
 - 借助 BRAM 实现双缓冲，在外界积极不断地输入和拿出数据的情况下，能达到 1数据/周期 的吞吐率。
 - 能轻松实现在外界不积极输入数据、输出数据的情况下，仍然保持结果正确：
-- 如果外界不积极地调用 `put` 方法，双缓冲经常为空，导致 `read_ram` 规则不激活，从而不再读出数据。
-- 如果外界不积极地调用 `get` 方法，则 `ram.portB` 的读缓冲区积攒数据，导致 `ram.portB.request.put` 被阻塞，导致 `read_ram` 规则不激活，导致双缓冲经常处于满的状态，最终导致 `put` 方法不能执行。
+  - 如果外界不积极地调用 `put` 方法，双缓冲经常为空，导致 `read_ram` 规则不激活，从而不再读出数据。
+  - 如果外界不积极地调用 `get` 方法，则 `ram.portB` 的读缓冲区积攒数据，导致 `ram.portB.request.put` 被阻塞，导致 `read_ram` 规则不激活，导致双缓冲经常处于满的状态，最终导致 `put` 方法不能执行。
+
 
 
 
@@ -4292,7 +4309,7 @@ FIFO 模块众多，功能大同小异，概览如**表16**。（从模块名可
 | 可在满时并发 enq 和 deq |  1   | mkLFIFO         | mkLFIFOF           | mkGLFIFOF     | FIFO、FIFOF  |
 | 可在空时并发 enq 和 deq |  1   | mkBypassFIFO    | mkBypassFIFOF      | -             | SpecialFIFOs |
 | 可在空时并发 enq 和 deq | 定制 | -               | mkSizedBypassFIFOF | -             | SpecialFIFOs |
-| 空时可 deq ，读出默认值 |  1   | -               | mkDFIFOF           | -             | SpecialFIFOs |
+| 空时可 deq ，读出默认值 |  2   | -               | mkDFIFOF           | -             | SpecialFIFOs |
 | BRAM 实现的大容量 FIFO  | 定制 | mkSizedBRAMFIFO | mkSizedBRAMFIFOF   | -             | BRAMFIFO     |
 
 **图7** 展示了 `mkFIFO` 、 `mkFIFO1`、 `mkLFIFO` 、 `mkBypassFIFO` 在什么情况下允许在同一周期并发压入和弹出。具体的解释和用例见本章的后文。
@@ -4383,7 +4400,7 @@ if(v1 == v3)
 
 ```bsv
 // 代码路径：src/15.Sqrt/Sqrt_v2.bsv （部分）
-   FIFO#( Tuple2#(UInt#(32), UInt#(32)) ) fifos [17];   // 接口数组，数组长度=17
+   FIFO#( Tuple2#(UInt#(32), UInt#(32)) ) fifos [17];   // 接口数组，数组长度=17 
                                                         // 接口类型是 FIFO#( Tuple2#(UInt#(32), UInt#(32)) )
                                                         // FIFO 内容数据类型是 Tuple2#(UInt#(32), UInt#(32))
    for(int n=16; n>=0; n=n-1)
@@ -4420,9 +4437,9 @@ module mkSqrtUInt32( FIFO#(UInt#(32)) );
    endmethod
 
    method deq = fifos[0].deq;             // 模块的 deq 方法负责：流水线最末级的 fifo deq
-
+   
    method UInt#(32) first;                // 模块的 first 方法负责：
-      match {.x, .y} = fifos[0].first;    //   拿到流水线最末级的 fifo.first , 解构该 Tuple2
+      match {.x, .y} = fifos[0].first;    //   拿到流水线最末级的 fifo.first , 解构该 Tuple2 
       return y;                           //   返回其中的结果数据 y
    endmethod
 
@@ -4444,7 +4461,7 @@ module mkTb();
    endrule
 
    Reg#(UInt#(32)) x <- mkReg(1);
-
+   
    FIFO#(UInt#(32)) sqrter <- mkSqrtUInt32;    // 实例化 mkSqrtUInt32，接口是 FIFO#(UInt#(32))
 
    rule sqrter_input;               // 这里也可以加入显式条件来实现不积极输入
@@ -4541,10 +4558,11 @@ FIFOF#(int) fifo2 <- mkGLFIFOF(False, True);   // 容量=1，接口为 FIFOF，�
 累加式存储器可以用来进行直方图统计，即统计输入数据流中各数据出现的频率。要求：
 
 - 功能：
-- 输入：地址 addr 和 data
-- 普通写：把 data 写入 addr
-- 累加写：读取 addr 中的数据 rdata ，与 data 相加后，再写回 addr。
-- 输出：无论是普通写还是累加写，都输出本次操作的地址 addr 和写入本地址的新值 data
+  - 输入：地址 addr 和 data
+  - 普通写：把 data 写入 addr
+  - 累加写：读取 addr 中的数据 rdata ，与 data 相加后，再写回 addr。
+  - 输出：无论是普通写还是累加写，都输出本次操作的地址 addr 和写入本地址的新值 data
+
 - 性能：吞吐率能达到 1 数据/周期
 - 要求有输入有效和输出反压机制
 - 时钟频率：为了不让组合逻辑路径太长，要求读 BRAM、加法计算、写 BRAM 先后放在3个不同的流水级。
@@ -4619,7 +4637,7 @@ endrule
 
 本节介绍模块 `mkDFIFOF`
 
-`mkDFIFOF` 与 `mkLFIFOF` 唯一的不同是：`mkDFIFOF` 的 first 和 deq 不具有隐式条件，当为空时：
+`mkDFIFOF` 与常规的容量为 2 的 `mkFIFOF` 唯一的不同是：`mkDFIFOF` 的 first 和 deq 不具有隐式条件，当为空时：
 
 - `mkDFIFOF` 允许调用 deq
 - `mkDFIFOF` 允许调用 first ，返回一个默认值
@@ -4636,11 +4654,9 @@ FIFOF#(int) fifo <- mkDFIFOF(42);    // 默认值=42
 
 我们用 `mkDFIFOF` 和 `mkFIFO` 改进 7.4 节遗留的具有输出反压功能的比特编码器，让它能获得接近 1数据/周期 的吞吐率。
 
-
-
 如**图9** 是设计思路。这里有个关键点：当遗留码寄存器堆积的长度超过 8bit 时，我们希望不论第1级有没有数据传递过来，第2级的规则都能激活，来把这 8bit 传递给输出级。换言之：我们总是希望遗留码寄存器能积极地清空自己。
 
-为了优雅地解决该关键点，我们在第1级和第2级之间使用 `mkDFIFOF` 。理由是：我们可以给 `mkDFIFOF` 设置一个默认值二元组： (生成码, 生成码的长度) = (0, 0) 。如果刚好 mkDFIFOF 为空，会取出默认值，而不会因为隐式条件的存在而阻止第2级的规则激活。
+为了优雅地解决该关键点，我们在第1级和第2级之间使用 `mkDFIFOF` 。理由是：我们可以给 `mkDFIFOF` 设置一个默认值二元组： (生成码, 生成码的长度) = (0, 0) 。如果刚好 `mkDFIFOF` 为空，会取出默认值，而不会因为隐式条件的存在而阻止第2级的规则激活。
 
 | ![图9](./readme_image/9.bit_coding.png) |
 | :-------------------------------------: |
@@ -4653,8 +4669,8 @@ FIFOF#(int) fifo <- mkDFIFOF(42);    // 默认值=42
 module mkBitCoder ( FIFO#(Bit#(8)) );
 
    FIFO#(Bit#(8))                      fifo1 <- mkFIFO;
-   FIFOF#(Tuple2#(Bit#(10), UInt#(4))) fifo2 <- mkDFIFOF( tuple2(0, 0) );
-   FIFO#(Bit#(8))                      fifo3 <- mkFIFO;
+   FIFOF#(Tuple2#(Bit#(10), UInt#(4))) fifo2 <- mkDFIFOF( tuple2(0, 0) ); 
+   FIFO#(Bit#(8))                      fifo3 <- mkFIFO;                  
 
    Reg#(Tuple2#(Bit#(31), UInt#(6))) drem_reg <- mkReg( tuple2(0, 0) );     // 存放遗留码 drem 以及其长度
 
@@ -4667,15 +4683,15 @@ module mkBitCoder ( FIFO#(Bit#(8)) );
       for(UInt#(4) i=0; i<8; i=i+1)                       // for循环：计算长度码 len
          if(din[i] == 1)
             len = i;
-
+      
       UInt#(4) trim_len = len>0 ? extend(len) : 1;        // 计算数据码 trim 的长度
-      Bit#(7) trim = truncate(din) & ~('1<<trim_len);     // 获取数据码 trim
+      Bit#(7) trim = truncate(din) & ~('1<<trim_len);     // 获取数据码 trim 
                                                           // 保留 din 的低 trim_len 个 bit，其余高位置 0）
       Bit#(10) code = {trim, pack(len)[2:0]};             // 获取生成码 code
 
       fifo2.enq(tuple2( code, trim_len+3 ));
    endrule
-
+   
    (* conflict_free = "clear, get_drem_and_dout" *)
 
    // 流水线第二级：更新遗留数据和输出数据
@@ -4714,7 +4730,7 @@ endmodule
 
 ## <span id="head124">8.8 BypassFIFO</span>
 
-BypassFIFO 包括3个模块：
+BypassFIFO 包括3个模块： 
 
 - `mkBypassFIFO` ：容量=1，接口为 FIFO
 - `mkBypassFIFOF` ：容量=1，接口为 FIFOF
@@ -4753,8 +4769,8 @@ import BRAMFIFO::*;
 
 BRAMFIFO 包括两个模块：
 
-- mkSizedBRAMFIFO ：接口为 FIFO
-- mkSizedBRAMFIFOF ：接口为 FIFOF
+- `mkSizedBRAMFIFO` ：接口为 FIFO
+- `mkSizedBRAMFIFOF` ：接口为 FIFOF
 
 以下代码实例化了两个 BRAMFIFO ：
 
@@ -4844,7 +4860,7 @@ endrule
 
 向量是一种复合数据类型，能提供比数组更强大的功能。使用前需要引入：
 
-```bsv
+```
 import Vector::*;
 ```
 
@@ -5056,7 +5072,7 @@ typedef enum {Green=125, Yellow=20, Red=85} Light deriving(Eq, Bits);
 
 ```bsv
 typedef enum {Green=125, Yellow=20, Red=85} Light deriving(Eq, Bits);
-Light va = unpack(0);    // 行为不确定！！ 因为编码 0 在 Light 类型中不存在 。pack(va) 甚至不再是 7'b0 ！！
+Light va = unpack(0);    // 行为不确定！！ 因为编码 0 在 Light 类型中不存在 。pack(va) 甚至不再是 7'b0 ！！ 
 Light vb = unpack(20);   // 行为确定，因为编码 20 在 Light 类型中对应 Yellow ，会得到 vb = Yellow
 ```
 
@@ -5136,7 +5152,7 @@ typedef struct{                 // 一个像素结构体，嵌套了 Vector 和 
 Pixel pixel;
 
 pixel = Pixel{     // 构造结构体的语法
-   color:replicate('hFF),    // color[0]='hFF    color[1]='hFF    color[2]='hFF
+   color:replicate('hFF),    // color[0]='hFF    color[1]='hFF    color[2]='hFF    
    transparent: False,       // transparent=False
    coord: Coord{x:1, y:2}    // coord.x=1    coord.y=2
 };
@@ -5146,7 +5162,7 @@ pixel = Pixel{     // 构造结构体的语法
 
 ```bsv
 let pixel = Pixel{
-   color:replicate('hFF),    // color[0]='hFF    color[1]='hFF    color[2]='hFF
+   color:replicate('hFF),    // color[0]='hFF    color[1]='hFF    color[2]='hFF    
    transparent: False,       // transparent=False
    coord: Coord{x:1, y:2}    // coord.x=1    coord.y=2
 };
@@ -5334,7 +5350,7 @@ y = case(x) matches
 
 我们以往接触过的函数参数类型和返回值类型都是固定的类型，比如是一个 int ：
 
-```verilog
+```bsv
 function int do_nothing( int i );   // 固定类型
    return i;
 endfunction
@@ -5342,7 +5358,7 @@ endfunction
 
 然而它们也可以是类型变量，比如类型变量名为 td （必须以小写字母开头）如下：
 
-```verilog
+```bsv
 function td do_nothing( td i );     // 可变类型
    return i;
 endfunction
@@ -5373,8 +5389,8 @@ endfunction
 
 以下 bit_equal 函数就有点意义了，它判断两个参数在编码层面是否相等。它允许两个参数具有不同的类型 td1 和 td2 ，把它们用 pack 函数转化成 Bit#() 类型后，再比较是否相等。 注意到 `provisos` 中有：
 
-- **派生要求**：要求 td1 派生自 Bits 类型类，并获取它的位宽 sz1
-- **派生要求**：要求 td2 派生自 Bits 类型类，并获取它的位宽 sz2
+- **派生要求**：要求 td1 派生自 Bits 类型类，并获取它的位宽 sz1 
+- **派生要求**：要求 td2 派生自 Bits 类型类，并获取它的位宽 sz2 
 - **关系要求**：用关系要求 `Add#(sz1, 0, sz2)` 要求 sz1+0==sz2 ，也即 sz1 == sz2
 - **数值类型** ：sz1 和 sz2 都是**数值类型**，是一种用来构造类型和接口的整数类型，比如 `Bit#(n)` 和 `Vector#(n, td)` 中的 n 都是数值类型。
 
@@ -5431,7 +5447,7 @@ endfunction
 注意区分普通函数、类型函数、伪函数：
 
 - **普通函数**（也就是5.6节学到的函数）：在仿真运行时执行。如果是可综合的，会转化成组合逻辑电路。
-- 特殊情况：当参数都为常量时，会在编译时就确定下返回值，从而降低仿真时的计算量和生成电路的面积，称为**常量传递**。
+  - 特殊情况：当参数都为常量时，会在编译时就确定下返回值，从而降低仿真时的计算量和生成电路的面积，称为**常量传递**。
 
 - **类型函数、伪函数**：编译期间执行。
 
@@ -5669,7 +5685,7 @@ module mkWireReg#(td init_data) ( Reg#(td) )    // 寄存器内的数据类型�
    rule set_self_wire;
       self_wire <= self_reg;
    endrule
-
+   
    method Action _write(td wdata);
       self_reg <= wdata;
       self_rwire.wset(wdata);
@@ -5716,13 +5732,13 @@ Reg#(int) wire_reg <- mkWireReg(0);   // 实例化一个 mkWireReg ，他有一�
 // 多态参数: n : 数值类型，双缓冲中每块的元素数量
 //          td : 数据元素类型
 //
-// 方法 put :
+// 方法 put : 
 //      参数 cancel : False:正常输入一项数据元素   True:撤销当前正在写的块，重新开始积攒n个元素
 //           indata : 一个输入数据元素
 //
 // 方法 get :
 //      效果        : 读一次数据，读出一整块（n个元素）
-//      返回值      : Tuple2(读计数，一整块数据)
+//      返回值      : Tuple2(读计数，一整块数据) 
 //                       读计数: 当前一整块被读的次数，从0开始
 //                       一整块数据:  n个元素的Vector
 interface DoubleBuffer#(numeric type n, type td);
@@ -5737,7 +5753,7 @@ endinterface
 // 代码路径：src/23.DoubleBuffer/DoubleBuffer.bsv （部分）
 //
 // 双缓冲模块
-//
+// 
 // 接口： DoubleBuffer#(n, td)
 //
 // 参数： readTimes : 读一个块的次数
@@ -5832,7 +5848,7 @@ module mkDoubleBuffer#( UInt#(32) readTimes ) ( DoubleBuffer#(n, td) )
       rcnt <= rcnt+1>=readTimes ? 0 : rcnt + 1;     // 移动读计数
       if( rcnt+1>=readTimes )                       // 如果读计数+1=读次数
          rblock <= rblock + 1;                      //   读块号+1, 即去读下一块
-
+      
       return tuple2(                                // 构造 tuple2 作为返回值
          rcnt,                                      //   读计数
          regVector2Vector( buffer[ rblock[0] ] )    //   从缓冲区读取的块
@@ -5842,7 +5858,7 @@ module mkDoubleBuffer#( UInt#(32) readTimes ) ( DoubleBuffer#(n, td) )
    endmethod
 ```
 
-以上，模块 `mkDoubleBuffer` 就设计完了 。
+以上，模块 `mkDoubleBuffer` 就设计完了 。 
 
 实例化 `mkDoubleBuffer` 的方法举例如下：
 
@@ -5898,7 +5914,7 @@ endmodule
 
 我们可以看到仿真打印符合以上分析：
 
-```verilog
+```bsv
 cnt=[   5]   rcnt=[   0]   data={  0  1  2  3  4}
 cnt=[   6]   rcnt=[   1]   data={  0  1  2  3  4}
 cnt=[   7]   rcnt=[   2]   data={  0  1  2  3  4}
@@ -6051,7 +6067,7 @@ mkAutoFSM 模块没有接口，不需要调用 start 方法就直接开始运行
    mkFSM mfsm <- mkFSM( seq
       // ...
       await( sfsm.done )             // 直到 sfsm 空闲才能跳到下一个周期，可能占多个周期
-                                     //  等效于 sfsm.waitTillDone;
+                                     //  等效于 sfsm.waitTillDone;         
       // ...
    endseq );
 ```
@@ -6062,7 +6078,7 @@ mkAutoFSM 模块没有接口，不需要调用 start 方法就直接开始运行
 
 ```bsv
 // 代码路径：src/24.FSMTest/FSMStructures.bsv （部分）
-   mkFSM mfsm <- mkFSM( seq
+   mkFSM mfsm <- mkFSM( seq        
       $display("fsm started");       // 状态1：占1个周期
       delay(100);                    // 状态2：占100个周期
       $display("delay done");        // 状态3：占1个周期
@@ -6077,7 +6093,7 @@ action 可以把多个动作语句合并成一个动作。
 
 ```bsv
 // 代码路径：src/24.FSMTest/FSMStructures.bsv （部分）
-   mkFSM mfsm <- mkFSM( seq
+   mkFSM mfsm <- mkFSM( seq        
       // ...
       action                         // 一个 action 只占一个状态，在同一周期执行
          regx <= regy;
@@ -6092,7 +6108,7 @@ action 可以把多个动作语句合并成一个动作。
 
 ```bsv
 // 代码路径：src/24.FSMTest/FSMStructures.bsv （部分）
-   mkFSM mfsm <- mkFSM( seq
+   mkFSM mfsm <- mkFSM( seq        
       // ...
       action                  // 只有在所有状态都满足时，才一并执行 action 中的所有语句
          fifo.enq(53);
@@ -6116,7 +6132,7 @@ action 可以把多个动作语句合并成一个动作。
 `repeat(n) ...` 可以把一个结构重复执行 n 次，比如可以把一个 seq 顺序结构重复三次：
 
 ```bsv
-   mkFSM mfsm <- mkFSM( seq
+   mkFSM mfsm <- mkFSM( seq        
       // ...
        repeat(3) seq
          $display("cnt=[%3d]  repeat", cnt);
@@ -6128,8 +6144,8 @@ action 可以把多个动作语句合并成一个动作。
 
 或者把一个 action 重复四次：
 
-```bsv
-   mkFSM mfsm <- mkFSM( seq
+```
+   mkFSM mfsm <- mkFSM( seq        
       // ...
       repeat(4) action
          $display("cnt=[%3d]  repeat", cnt);
@@ -6216,7 +6232,7 @@ action 可以把多个动作语句合并成一个动作。
 
 以下是一个例子：
 
-```bsv
+```
    FSM mfsm <- mkFSM( seq
       // ...
       while(cnt % 5 != 0) seq
@@ -6293,8 +6309,8 @@ endseq
 // 设 regx 是寄存器
 seq
    action        // 这样是可以的：
-      int x=0;
-      x = regx;
+   	  int x=0; 
+   	  x = regx; 
       for(int y=0; y<4; y=y+1)
          x = x + y;
       regx <= x;
@@ -6317,7 +6333,8 @@ endseq
 SPI 发送器 `mkSPIWriter` 的代码如下。实现思路是：
 
 - 在 write 方法里，把待写的 8 bit 数据（字节）存到 wdata 寄存器里，并启动状态机。
-- 注意：write 方法会获得隐式条件“状态机空闲”，也就是说，当状态机正忙时，外界无法调用 write 方法。
+  - 注意：write 方法会获得隐式条件“状态机空闲”，也就是说，当状态机正忙时，外界无法调用 write 方法。
+
 - 状态机内，用 while 循环 8 次，每次拿出 wdata 中的一个 bit 赋给 mosi 信号。同时也要正确地控制 ss 和 sck 信号。
 - 在 spi 方法里，直接把 ss, sck, mosi 三个信号引出。
 
@@ -6388,18 +6405,21 @@ endmodule
 
 无论 BSV 写的多花里胡哨，部署在 FPGA 最终还是要用 Verilog 。本节介绍如何把自己编写的 BSV 模块嵌入 Verilog 项目里。
 
+BSV 编译器可以把 BSV 代码以模块为单位转化成符合 Verilog-2001 标准的 Verilog 代码，在各种开发平台（Quartus、Vivado等）上具有极好的移植性。之所以不转化为新的 Verilog-2005 或 SystemVerilog ，是考虑到各家综合工具对旧版 Verilog 的语法解读更加统一，歧义更小。
+
 个人推荐的开发流程是：
 
 1. 编写 BSV 功能模块：
-- 不仅要编写模块本身，还要编写一个 testbench 来调用并测试它。不仅是为了验证正确性，也是为了生成一个仿真波形，让我们在信号层面上理解调用者是如何和被调用者交互的。
-- 在调试时，如果只想看仿真打印，推荐使用 BSV 仿真（而不是Verilog仿真），也就是命令行 `bsvbuild.sh -bs` ，因为仿真运行速度会更快。
-- 对于你想要独立生成 Verilog 代码的模块，别忘了在 module 定义上加上 `(* synthesis *)`  属性
-- 泛型模块不能作为生成 Verilog 代码的顶层，不能加  `(* synthesis *)`  属性，且只能被其它模块调用。
+
+   - 不仅要编写模块本身，还要编写一个 testbench 来调用并测试它。不仅是为了验证正确性，也是为了生成一个仿真波形，让我们在信号层面上理解调用者是如何和被调用者交互的。
+   - 在调试时，如果只想看仿真打印，推荐使用 BSV 仿真（而不是Verilog仿真），也就是命令行 `bsvbuild.sh -bs` ，因为仿真运行速度会更快。
+   - 对于你想要独立生成 Verilog 代码的模块，别忘了在 module 定义上加上 `(* synthesis *)`  属性
+   - 泛型模块不能作为生成 Verilog 代码的顶层，不能加  `(* synthesis *)`  属性，且只能被其它模块调用。
 2. 编写完成后，用命令行 `bsvbuild.sh -vw` 生成 Verilog 代码，并生成仿真 `.vcd`波形文件。
 3. 查看生成的 Verilog 模块的输入输出接口：
-- 生成的 Verilog 文件 (.v) 可能有很多个，每个对应文件一个模块，包括一些子模块，以及仿真代码生成的仿真模块。你需要查看的是与你想要的 BSV 模块同名的 Verilog 模块。
+   - 生成的 Verilog 文件 (.v) 可能有很多个，每个对应文件一个模块，包括一些子模块，以及仿真代码生成的仿真模块。你需要查看的是与你想要的 BSV 模块同名的 Verilog 模块。
 4. 打开 .vcd 波形文件，找到你想要的模块的调用者，查看它调用该模块的波形，理解各信号的意义。
-- 如果你想要删除一些不必要的 EN 和 RDY 握手信号，在 BSV 代码文件中的模块上加上 `always_enabled` 和 `always_ready`  属性，重新生成 Verilog 。
+   - 如果你想要删除一些不必要的 EN 和 RDY 握手信号，在 BSV 代码文件中的模块上加上 `always_enabled` 和 `always_ready`  属性，重新生成 Verilog 。
 5. 根据如上理解，以及你的项目需要，编写 Verilog 调用者代码来调用该模块。
 
 
@@ -6418,11 +6438,13 @@ endmodule
 
 ### <span id="head173"> 时钟和复位</span>
 
-首先，全局时钟信号输入 CLK 和全局复位信号输入 RST_N 是一定会生成的：
+首先，全局时钟信号输入 `CLK` 和全局复位信号输入 `RST_N` 是一定会生成的：
 
-- input CLK 全局时钟：模块的所有输出信号在 CLK 的上升沿变化 ，所有输入信号在 CLK 的上升沿被采样
-- 这是标准的同步时序逻辑
-- input RST\_N 全局同步复位：当 CLK 的上升沿，若 RST_N=0 ，模块中需要复位的寄存器复位。若 RST_N=1 ，则正常工作
+- `input CLK` 全局时钟：模块的所有输出信号在 `CLK` 的上升沿变化 ，所有输入信号在 `CLK` 的上升沿被采样
+  - 这是典型的标准同步时序逻辑
+- `input RST_N` 全局复位：当 `CLK` 的上升沿，若 `RST_N=0` ，模块中需要复位的寄存器复位。若 `RST_N=1` ，则正常工作
+  - 这是典型的标准同步复位
+
 
 
 
@@ -6466,14 +6488,14 @@ endinterface: FIFO
 
 打开生成的 Verilog 文件 `mkBitCoder.v` ，看到模块输入输出信号如下，BSV 还帮我们生成了相关的描述注释：
 
-```bsv
+```verilog
 // Ports:                                          // 笔者注释：关注以下输入输出描述
 // Name                         I/O  size props
 // RDY_enq                        O     1 reg
 // RDY_deq                        O     1 reg
 // first                          O     8 reg
 // RDY_first                      O     1 reg
-// RDY_clear                      O     1 const    // 是 const 代表这个信号可能可以省略
+// RDY_clear                      O     1 const    // 笔者注释：const 代表这个信号可能可以省略
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
 // enq_1                          I     8 reg
@@ -6524,13 +6546,13 @@ module mkBitCoder(CLK,
 对于动作方法 enq ：
 
 - output RDY_enq : 代表当前时钟周期 enq 的隐式条件是否满足，即模块是否接受外界输入 enq_1 数据
-- input  EN_enq : 代表当前时钟周期外界是否想输入 enq_1 数据。只允许在 RDY_enq=1 的周期=1
+- input  EN_enq : 代表当前时钟周期外界是否想输入 enq_1 数据。只允许在 RDY_enq=1 的周期=1 
 - input  [7 : 0] enq_1 : 是 8bit 的输入数据，每当 RDY_enq=EN_enq=1 （握手成功）时输入一次
 
 对于动作方法 deq ：
 
 - output RDY_deq : 代表当前时钟周期 deq 的隐式条件是否满足，即模块是否有可弹出的数据
-- input  EN_deq : 代表外界是否想弹出数据。只允许在 RDY_deq=1 的周期=1
+- input  EN_deq : 代表外界是否想弹出数据。只允许在 RDY_deq=1 的周期=1 
 - 因为没有参数所以没有输入信号
 
 对于值方法 first ：
@@ -6550,9 +6572,9 @@ module mkBitCoder(CLK,
 
 为了印证以上分析，打开 `.vcd` 波形文件查看这些信号。如**图12**，可以看出：
 
-- 调用者积极地调用 enq 方法：即只要 RDY_enq=1 ，就让 EN_enq=1
+- 调用者积极地调用 enq 方法：即只要 RDY_enq=1 ，就让 EN_enq=1 
 - 只要 RDY_enq=EN_enq=1 （握手成功），就令输入数据 enq_1 更新为下一个待输入数据
-- 调用者积极地调用 deq 方法：即只要 RDY_deq=1 ，就让 EN_deq=1
+- 调用者积极地调用 deq 方法：即只要 RDY_deq=1 ，就让 EN_deq=1 
 - 每当 RDY_deq=EN_deq=1 （握手成功），直到下次 RDY_deq=1 ，输出数据 first 会更新，这是因为成功弹出了上一个输出数据
 - RDY_deq 与 RDY_first 永远相等，因为 deq 与 first 隐式条件相同。在编写 Verilog 时任选一个来用即可。
 
@@ -6583,13 +6605,16 @@ module mkBitCoder(CLK,
 对于值方法：
 
 - RDY=1 说明输出数据有效。
+- 不存在 EN 信号，因为无论外界是否调用值方法，都不会对被调用模块产生影响。
 
 对于动作方法和动作值方法：
 
 - RDY 信号指示当前是否能调用该方法。
-- RDY=1 时说明输出数据有效（如果有返回值）。
+  - RDY=1 时说明输出数据有效（如果是动作值方法）。
+
 - EN 信号指示当前外界是否要调用该方法，要求只能在 RDY=1 时让 EN=1 。
-- EN=1 时，必须让输入数据有效（如果有参数）。
+  - EN=1 时，必须让输入数据有效（如果有参数）。
+
 - 每当 EN=RDY=1 的时钟周期，一次握手完成，方法被调用了一次。
 
 我们编写 Verilog 来调用 BSV 生成的 Verilog 模块时，需要依照以上原则，根据模块输出的 RDY 和 输出数据 信号来正确地产生 EN 和 输入数据信号。
@@ -6692,7 +6717,7 @@ Verilog 代码库的路径包括：
 
 本章提供三个样例 SPIFlash 读写器、 RISC-V 流水线 CPU 、 JPEG 图像压缩器 。
 
-代码都验证通过，后续补充注释和原理介绍。
+本章配套代码已全部完成并测试，部分文字尚未完成，留待后续补充。
 
 
 
@@ -6700,23 +6725,33 @@ Verilog 代码库的路径包括：
 
 代码目录：  `src/SPIFlash`
 
+- `SPIFlashController.bsv` 包含 SPIFlash 读写控制器模块 `mkSPIFlashController` 。
+- `SPIController.bsv` 包含 SPI 控制器模块 `mkSPIController` ，被 `mkSPIFlashController` 调用。
+- `TbSPIFlashController.bsv` 包含仿真顶层模块 `mkTb` ，是 `mkSPIFlashController`  的 testbench 。
+
+目的：展示状态机 StmtFSM 包的复杂应用。
+
+核心知识点：
+
+- 状态机实现外设总线协议
+
 ### <span id="head185"> 原理介绍</span>
 
 实现 W25QXX 系列 SPIFlash 的读写控制器，包括页读、页写、页擦除。
 
-思路是用 StmtFSM 包来写一个更复杂的状态机。后续补充……
+> 留待后续补充……
 
 ### <span id="head186"> 结果展示</span>
 
 运行命令生成仿真波形：
 
 ```bash
-bsvbuild.sh -vw mkTb SPIFlashController.bsv
+$ bsvbuild.sh -vw mkTb SPIFlashController.bsv
 ```
 
 查看波形：
 
-|  ![图14](./readme_image/15.spiflash_wave.png)  |
+|  ![图15](./readme_image/15.spiflash_wave.png)  |
 | :--------------------------------------------: |
 | **图15**：仿真产生的页擦除、页写 (部分) 的波形 |
 
@@ -6726,35 +6761,179 @@ bsvbuild.sh -vw mkTb SPIFlashController.bsv
 
 代码目录：  `src/Rv32iCPU`
 
+- `Rv32iCPU.bsv` 包含 RISC-V CPU 模块 `mkRv32iCPU` 。
+- `DFIFOF1.bsv` 包含多态模块 `mkDFIFO1` ，它被 `mkRv32iCPU` 调用。
+- `TbRv32iCPU.bsv` 包含仿真顶层模块 `mkTb` ，是 `mkRv32iCPU`  的 testbench 。
+- `benchmark` 目录包含一些能让 CPU 运行的程序，也即指令流文件和数据流文件。
+
+目的：展示如何用 BSV 优雅地实现经典四级流水线 CPU 。
+
+核心知识点：
+
+- 用各种 FIFO 构建弹性流水线
+- 用结构体提升代码可读性
+- 调度属性
+
 ### <span id="head188"> 原理介绍</span>
 
-实现的 CPU：
+RV32I 是 RISC-V 的基础整数指令集，本节实现完整支持 RV32I 指令集的 CPU，重点在于展示经典四级流水线 CPU 的原理，并跑一些 RISC-V 指令流程序来验证。
 
-- 具有基本完备的 RV32I 指令集（除了不支持 CSR 类指令、不支持单字节和双字节Load/Store）
--  EX和WB阶段的寄存器结果会转发到ID阶段，降低 CPI
-- 弹性流水线：支持指令总线停顿和数据总线停顿，而不影响流水线后级向后传递。
+一些术语说明如**表23** 。
 
-主要思路包括：各种 FIFO 的运用；用高级数据结构降低代码量。
+​			**表23**：CPU 体系结构中的术语
 
-后续补充……
+| 简称    | 全称           | 释义                           | 备注                                           |
+| ------- | -------------- | ------------------------------ | ---------------------------------------------- |
+| pc      | 程序计数       | 当前指令在指令 RAM 中的地址    | 32bit                                          |
+| npc     | 下一条程序计数 | 下一条需要执行的指令的地址     | 无跳转时 npc=pc+4（每条指令占4字节）           |
+| imm     | 立即数         | 从指令中直接获取的数据         | 32bit                                          |
+| regfile | 寄存器文件     | 通用寄存器阵列                 | 32 个 32bit 的通用寄存器                       |
+| rsrc1   | 源寄存器1      | 从寄存器文件中读取的寄存器值   | 32bit                                          |
+| rsrc2   | 源寄存器2      | 从寄存器文件中读取的寄存器值   | 32bit                                          |
+| rdst    | 目的寄存器     | 写入寄存器文件的值             | 32bit                                          |
+| ibus    | 指令总线       | 接受 pc 作为访存地址，读出指令 |                                                |
+| dbus    | 数据总线       | 接受访存请求，读出读数据       | 请求字：是读是写、写字节使能、读写地址、写数据 |
+
+RV32I 的所有指令类型如**表24** 。
+
+​			**表24**：RV32I 包含的9种指令的大致行为。一些细节没展示，比如 LOAD 和 STORE 还分为按字节访存、按字访存、按双字访存。
+
+| 指令类型r    | rsrc1              | rsrc2              | rdst     | 访存地址  | npc                                         |
+| ------------ | ------------------ | ------------------ | -------- | --------- | ------------------------------------------- |
+| JAL          |                    |                    | pc+4     |           | pc+imm                                      |
+| JALR         | :heavy_check_mark: |                    | pc+4     |           | rsrc1+imm                                   |
+| BRANCH       | :heavy_check_mark: | :heavy_check_mark: |          |           | pc+imm 或 pc+4 (取决于 rsrc1 和 rsrc2 比较) |
+| AUIPC        |                    |                    | pc+imm   |           | pc+4                                        |
+| LUI          |                    |                    | imm      |           | pc+4                                        |
+| 立即数类算术 | :heavy_check_mark: |                    | ALU 结果 |           | pc+4                                        |
+| 寄存器类算术 | :heavy_check_mark: | :heavy_check_mark: | ALU 结果 |           | pc+4                                        |
+| LOAD         | :heavy_check_mark: | :heavy_check_mark: | 内存读值 | rsrc1+imm | pc+4                                        |
+| STORE        | :heavy_check_mark: | :heavy_check_mark: |          | rsrc1+imm | pc+4                                        |
+
+从**表24**看出，指令是否读取 rsrc1/rsrc2 、是否写入 rdst 、是否访存、如何跳转等行为会带来各种各样的变化。为此，我们设计流水线如**图15**，它包括四段：
+
+1. **IF段** (Instruction Fetch) ：
+   - 持有当前的 pc，把它作为读地址送入 ibus（指令总线）。
+2. **ID段** (Instruction Decode) ：从指令总线读到指令，用它：
+
+   - 译码：获取 opcode 、 imm 、rsrc1号 、 rsrc2号 、rdst号 等信息。
+   - 读取 regfile：根据 rsrc1号 、 rsrc2号 读取 regfile，得到 rsrc1 和 rsrc2 。
+   - 计算 npc ：
+   - 当指令不是 JAL、JALR、BRANCH 时，向 IF段 发送 npc=pc+4 （顺序执行的下一条指令）；
+   - 当指令为 JAL 时，向 IF段 发送 npc=pc+imm ；
+   - 当指令为 JALR 时，暂不能确定跳转地址；当指令为 BRANCH 时，暂不能确定是否跳转。需要寄存器的计算结果。因此等 EX/MEM 段再跳转。
+3. **EX/MEM段** (Execute/Memory access) ，简称 **EX段** ：用译码后的指令和寄存器读值进行：
+
+   - 计算 npc：
+
+   - 当指令为 JALR 时，向 IF段 发送 npc=rsrc1+imm ；
+
+   - 当指令为 BRANCH 时，根据比较结果判断 npc=pc+imm 还是 npc=pc+4 。
+
+
+   - 计算：对于算术逻辑类指令，用 ALU 计算目的寄存器结果。
+
+   - 访存：对于 LOAD/STORE，用“访存转换”算出读写请求：（是读是写、写字节使能、读写地址、写数据），送入ibus
+
+4. **WB段** (Write Back to Register) ：对于所有要写入寄存器的指令，把相应的结果写回，其中：
+
+   - 如果是 LOAD 指令，从 dbus 中拿到结果。
+
+   - 如果是其它指令（算术逻辑指令、JAL、JALR、LUI、AUIPC），从 ALU 拿到结果。
+
+| ![图18](./readme_image/18.rv32i_pipe.png) |
+| :---------------------------------------: |
+|   **图18**：RISC-V CPU 四级流水线设计图   |
+
+**图18**包含了本科课程《计算机组成原理》一般涉及的两种流水线停顿：
+
+- 跳转停顿：BRANCH/JALR 指令需要寄存器读值才能计算 npc ，为了防止 ID段 组合逻辑过长，我们在 EX段 才计算并发送 npc 到 IF 段，导致总是在 ID段 产生一周期的气泡 （这里不考虑 speculation + 冲刷流水线的技术）。
+- 实现方法：EX段 和 ID段 都可以向 IF段 发送 npc ，但不会同时，所以给 EX段 和 ID段 加上 `(* conflict_free *)` 属性。
+
+- 写后读依赖停顿：当 WB段 或 EX段 的 rdst号 与 ID段 的 rsrc1号 或 rsrc2号 碰撞时，说明 ID段 要读取尚未写入寄存器的数据，ID段 需要停顿直到不再碰撞（数据已经写入 regfile）为止。
+- 实现方法：对于 ID段 的停顿，在 ID段 安插一个 mkBypassFIFO ，在停顿时保存 ibus 响应的读指令，避免它消失。
+- 额外优化：在 WB段 的 ALU结果 是经过寄存器缓存的，不是组合逻辑路径，因此当与 ID段 碰撞时，不停顿 ID段，而是用转发 (forward) 技术把 ALU结果 转发到 ID段。
+
+
+另外，我们还灵活运用各种 FIFO 实现了《计算机组成原理》中一般不要求实现，但在实际应用中非常必要的功能——总线停顿。ibus 和 dbus 都可能发生总线停顿，包括两种：
+
+- 请求停顿：可能暂时无法接受一个请求。比如遇到了 cache miss 或总线从机争用。
+- 响应停顿：接受请求后，响应的读出指令/读出数据 并不一定在下周期出现，有可能是下下周期、下下下周期。具有不确定的延迟。
+
+我们使用以下方法解决这些总线停顿：
+
+- 对于 ibus 的请求停顿，在 IF段 安插一个 mkBypassFIFO ，当 ibus 无法接受请求时，缓存住 npc 。
+- 对于 ibus 的响应停顿，当停顿发生时，ID段 的 mkBypassFIFO 无数据， ID段 的规则就不会执行，不会向后传递指令，直到 ibus 有响应为止。
+- 对于 dbus 的请求停顿，在 EX段 安插一个 mkBypassFIFO ，当 dbus 无法接受请求时，缓存该请求。
+- 对于 dbus 的响应停顿，用一个 mkDFIFO1 进行同步。当 dbus 暂无响应时，不从 mkDFIFO1 中拿走一个数据，导致 EX段 停顿，不会继续向前执行。
+
+>  mkDFIFOF1 不是 BSV 的库里预定义的，是我自己编写的多态模块，它与 mkFIFOF1 唯一的区别是：可以在空时用 first 读到一个默认数据。
+
+如果你用 Verilog 编写过流水线 CPU 就会知道，在如上所述的这些跳转停顿、写后读停顿、各种总线停顿的存在下，需要很复杂的冒险处理模块（Hazard Unit）来控制各种停顿组合下流水线的推移。然而在 BSV 的思维下，我们灵活地用 FIFO 的思维来应对这些停顿，不仅让流水线示意图（**图18**）更清晰易懂，也让代码修改变得更简单，方便我们进行设计空间搜索。例如你想试试在 ID段 就把 BRANCH/JALR 的 npc 发送给 IF段 会怎样，就不需要像 Verilog 那样既修改指令流又修改数据流（这样也很容易改出bug）
+
+具体的代码实现见`Rv32iCPU.bsv` （请结合**图18**阅读代码）。
 
 ### <span id="head189"> 结果展示</span>
 
 **仿真**：
 
-mkTb模块会让 CPU 运行一段快速排序程序，该快速排序程序的指令流见文件 `src/Rv32iCPU/instruction_stream/instruction_stream_quicksort.txt` 。它来自汇编源码 `src/Rv32iCPU/instruction_stream/assembly_quicksort.S` 。
+你可以修改 testbench 代码  `TbRv32iCPU.bsv` 中的两个字符串：
 
-直接运行仿真命令：
-
-```bash
-bsvbuild.sh -bs mkTb Rv32iCPU.bsv
+```bsv
+String   filename_instruction = "benchmark/qsort_instruction.txt";
+String   filename_data        = "benchmark/no_data.txt";
 ```
 
-可以看到打印了排序后的结果。
+来指定要让 CPU 运行的指令流（放在指令 RAM 中）和数据流（放在数据 RAM 中）。
+
+还可以修改：
+
+```bsv
+Bit#(32) print_data_count     = 40;
+```
+
+来决定仿真结束前打印数据 RAM 中的前多少个数据（用于查看结果）。
+
+我在 benchmark 目录里提供了四个测试程序，说明如**表25**。
+
+​			**表25**：我们实现的 CPU 的测试程序
+
+| 程序说明 | filename_instruction 取值           | filename_data                | 测试成功的标志   |
+| -------- | ----------------------------------- | ---------------------------- | ---------------- |
+| 快速排序 | `"benchmark/qsort_instruction.txt"` | 随意 *****                   | 看排序结果 ***** |
+| 算术测试 | `"benchmark/testA_instruction.txt"` | 随意 *****                   | 最终 pc/4=2227   |
+| 访存测试 | `"benchmark/testB_instruction.txt"` | `"benchmark/testB_data.txt"` | 最终 pc/4=2719   |
+| 跳转测试 | `"benchmark/testC_instruction.txt"` | 随意 *****                   | 最终 pc/4=2906   |
+
+> *****：随意代表可以随意设置，该程序不要求数据 RAM 中有初始值。
+>
+> *****：排序结果通过打印数据 RAM 中的前 38 个数据来查看，这 38 个数据应该是由小到大排列的。
+
+按**表25**设置好你想在 CPU 上运行的程序，然后运行以下命令来仿真：
+
+```bash
+$ bsvbuild.sh -bs mkTb TbRv32iCPU.bsv
+```
+
+仿真会在检测到 CPU 遇到死循环（JAL跳转到自身）时停止，然后会打印此时的一些信息，以及数据 RAM 中的前 `print_data_count` 个数据。
+
+例如，对于访存测试（testB），你会看到如下的打印：
+
+```
+fetch: cycle= 5479   instructions= 3599   100*cpi= 152   pc/4= 2719
+DataRAM[00000000] =       16535
+DataRAM[00000004] = -1396670317
+DataRAM[00000008] =       36611
+省略...
+```
+
+这代表总共运行了 5479 个周期，3599 条指令， 100*cpi=152（平均运行每条指令需要1.52个周期），最后死循环停在了 pc/4=2719 的为止。依照**表25**可知测试成功。
+
+另外，你还可以按照 `TbRv32iCPU.bsv` 中注释的指示，加入 ibus 和 dbus 的请求停顿和响应停顿，看看测试是否还能成功。（我验证过各种停顿的组合情况下，均成功）
 
 **Verilog 综合结果**：
 
-生成的 `mkRv32iCPU.v` 在 Altera Cyclone IV EP4CE115F29C8 上占用 5229 LE (logic elements)，占总量的5%。时钟频率达到 77MHz 。
+生成的 `mkRv32iCPU.v` 在 Altera Cyclone IV EP4CE115F29C8 上占用 5312 LE (logic elements)，占总量的5%。时钟频率达到 77MHz 。
 
 
 
@@ -6762,39 +6941,60 @@ bsvbuild.sh -bs mkTb Rv32iCPU.bsv
 
 代码目录：  `src/JpegEncoder`
 
+- `JpegEncoder.bsv` 包含 JPEG 图像压缩器模块 `mkJpegEncoder` 。
+- `DoubleBuffer.bsv` 包含多态双缓冲模块 `mkDoubleBuffer` ，被 `mkJpegEncoder` 调用。
+- `TbJpegEncoder.bsv` 包含仿真顶层模块 `mkTb` ，是 `mkJpegEncoder`  的 testbench 。
+- `PgmReader.bsv` 包含用于读取 .pgm（未压缩灰度图文件）的模块，仅限于仿真使用，被 `mkTb` 调用。
+- `img` 目录包含一些 .pgm 文件，用来在仿真时被送入 `mkJpegEncoder`  进行压缩。
+- `python/txt2jpg.py` 转换工具，用于把仿真生成的包含十六进制数的文本文件转化为二进制文件（.jpg图像是二进制文件）。
+- `python/jpeg_encoder.py` 是 JPEG 图像压缩器的软件代码实现，硬件模块  `mkJpegEncoder` 是根据它编写的。
+
+目的：展示如何用 BSV 优雅地实现 JPEG 图像压缩器。
+
+核心知识点：
+
+- 双缓冲
+- 矩阵乘法
+- 多态的应用
+- Vector 的应用
+
 ### <span id="head191"> 原理介绍</span>
 
 该模块根据 JPEG 图像压缩算法的 python 代码 `src/JpegEncoder/python/jpeg_encoder.py` 编写。
 
 能输入图像（8bit灰度图）的原始像素，输出 JPEG 压缩流（带有 `.jpg` 文件头尾）。
 
-主要思想是双缓冲（用多态模块实现）、 Vector 的各种运用。
-
-后续补充……
+> 留待后续补充……
 
 ### <span id="head192"> 结果展示</span>
 
 **仿真**：
 
-mkTb模块会读取并解析原始像素文件（不压缩的 `.pgm` 格式），把像素输入到 `JpegEncoder` 模块，再从中拿出压缩后的像素，写入一个文本文件 `out.jpg.txt` 。
+testbench 模块会读取并解析原始像素文件（不压缩的 `.pgm` 格式），把像素输入到 `mkJpegEncoder` 模块，再从中拿出压缩后的像素，以十六进制数的形式写入一个文本文件 `out.jpg.txt` 。
 
-首先在 `JpegEncoder.bsv`  的 327 行指定你想要压缩的文件名，可以任意指定我在 `src/JpegEncoder/img` 文件夹下提供的 `.pgm` 格式的原始图像文件。
+首先指定你想压缩的图像文件，比如是 `img/in003.pgm` ，方法是修改 `TbJpegEncoder.bsv`  中的如下一行：
+
+```bsv
+PgmReader   pgm_reader  <- mkPgmReader("img/in003.pgm");
+```
 
 然后运行仿真命令：
 
 ```bash
-bsvbuild.sh -bs JpegEncoder.bsv
+$ bsvbuild.sh -bs mkTb TbJpegEncoder.bsv
 ```
 
-会看到产生了一个 `out.jpg.txt` 文件，打开它可以看到文本形式的图像压缩流（笔者还没研究出来 BSV 怎么直接写二进制文件，所以目前只能写在文本文件里）。
+会看到产生了一个 `out.jpg.txt` 文件，打开它可以看到文本形式的十六进制数，它就是图像压缩流。
 
-然后，用以下命令调用我写的一个 python 脚本，把文本文件转化为二进制文件：
+然后，用以下命令调用我写的转换工具，把文本文件转化为二进制文件：
 
 ```bash
-python python/txt2jpg.py out.jpg.txt out.jpg
+$ python python/txt2jpg.py out.jpg.txt out.jpg
 ```
 
 得到的 `out.jpg` 可以用图像查看器直接打开查看。
+
+> 笔者还没研究出来 BSV 怎么直接写二进制文件，所以目前只能写在文本文件里。
 
 **Verilog 综合结果**：
 

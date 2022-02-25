@@ -1,12 +1,3 @@
-
-1testAll.om:     file format elf32-littleriscv
-
-
-Disassembly of section .text:
-
-00010080 <_start>:
-   10080:	00000013          	nop
-
 00010084 <test_2>:
    10084:	00000093          	li	ra,0
    10088:	00000113          	li	sp,0
@@ -2718,5 +2709,3 @@ Disassembly of section .text:
 
 00012350 <finish1>:
    12350:	00000a6f          	jal	s4,12350 <finish1>
-   12354:	c0001073          	unimp
-	...
