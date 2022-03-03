@@ -63,13 +63,14 @@ Verilog 的语法简单、特性少，却能全面且精准的描述绝大多数
 	- [3.1 安装 bsc 编译器](#head12)
 	- [3.2 安装 iverilog 和 Tcl](#head13)
 	- [3.3 安装 gtkwave](#head14)
-	- [3.4 部署脚本 bsvbuild.sh](#head17)
+	- [3.4 部署 bsvbuild.sh 脚本](#head17)
 	- [3.5 找一款顺手的代码编辑器](#head18)
 - [4 项目组织与构建](#head19)
-	- [4.1 单模块项目](#head20)
-	- [4.2 单包多模块项目](#head21)
-	- [4.3 多包项目](#head22)
-	- [4.4 生成与查看波形](#head23)
+	- [4.1 bsvbuild.sh 脚本](#head20s)
+	- [4.2 单模块项目](#head20)
+	- [4.3 单包多模块项目](#head21)
+	- [4.4 多包项目](#head22)
+	- [4.5 生成与查看波形](#head23)
 - [5 类型与变量](#head24)
 	- [5.1 类型类](#head25)
 	- [5.2 基本数据类型](#head26)
@@ -173,31 +174,31 @@ reg [7:0] rdata = 0;
 assign rdy = (cnt==0) ? 1 : 0;
 
 always @ (posedge clk or negedge rstn)
-	if(!rstn) begin
-		{ss, sck, mosi} <= 3’b111;
-	end else begin
-		if(cnt==0) begin
-			if(en) begin
-				rdata <= data;
-				cnt <= 1;
-			end
-		end else if(cnt==1) begin
-			ss <= 1’b0;               // ss 拉低
-			cnt <= cnt + 1;
-		end else if(cnt<=17) begin
-			sck <= cnt[0];            // cnt 为偶数时，令 sck=0，cnt 为奇数时，令 sck=1。
-			mosi <= rdata[8-(cnt/2)]; // 在 mosi 上产生串行输出
-			cnt <= cnt + 1;
-		end else if(cnt==18) begin
-			mosi <= 1’b1;
-			cnt <= cnt + 1;
-		end else if(cnt==19) begin
-			ss <= 1’b1;               // ss 拉高
-			cnt <= cnt + 1;
-		end else begin
-			cnt <= 0;
-		end
-	end
+  if(!rstn) begin
+    {ss, sck, mosi} <= 3’b111;
+  end else begin
+    if(cnt==0) begin
+      if(en) begin
+        rdata <= data;
+        cnt <= 1;
+      end
+    end else if(cnt==1) begin
+      ss <= 1’b0;               // ss 拉低
+      cnt <= cnt + 1;
+    end else if(cnt<=17) begin
+      sck <= cnt[0];            // cnt 为偶数时，令 sck=0，cnt 为奇数时，令 sck=1。
+      mosi <= rdata[8-(cnt/2)]; // 在 mosi 上产生串行输出
+      cnt <= cnt + 1;
+    end else if(cnt==18) begin
+      mosi <= 1’b1;
+      cnt <= cnt + 1;
+    end else if(cnt==19) begin
+      ss <= 1’b1;               // ss 拉高
+      cnt <= cnt + 1;
+    end else begin
+      cnt <= 0;
+    end
+  end
 ```
 
 以上 Verilog 代码已经是一个很简短的实现了，但可读性很差，难于修改，如果我们想在 `ss` 拉低之前再插入一个时钟周期干其它的事情，则后面的所有状态转移以及 `2≤cnt≤17` 时的奇偶判断都得改，容易改出 bug。
@@ -206,23 +207,22 @@ always @ (posedge clk or negedge rstn)
 
 ```verilog
 // Verilog SPI 发送（testbench 写法，不可综合！！）
-reg signed [31:0] cnt = 7;       // cnt 初始值为 7
+reg signed [31:0] cnt = 7;      // cnt 初始值为 7
 initial begin
-	{ss, sck, mosi} <= 3’b111;
-	@(posedge clk)               // 等到下一个时钟上升沿
-		ss <= 1’b0;              // ss 拉低
-	while(cnt>=0) begin          // while 循环，cnt 从 7 递减到 0，共8次
-		@(posedge clk) begin     // 等到下一个时钟上升沿
-			sck <= 1’b0;         // sck 拉低
-			mosi <= wdata[cnt];  // mosi 依次产生串行 bit
-		end
-		@(posedge clk) begin     // 等到下一个时钟上升沿
-			sck <= 1’b1;         // sck 拉高
-			cnt = cnt - 1;       // cnt 每次循环都递减
-		end
-	end
-	@(posedge clk) mosi <= 1’b1; // mosi 拉高
-	@(posedge clk) ss <= 1’b1;   // ss 拉高，发送结束
+  {ss, sck, mosi} <= 3’b111;
+  @(posedge clk) ss <= 1’b0;    // 等到下一个时钟上升沿，ss 拉低
+  while(cnt>=0) begin           // while 循环，cnt 从 7 递减到 0，共8次
+    @(posedge clk) begin        // 等到下一个时钟上升沿
+      sck <= 1’b0;              // sck 拉低
+      mosi <= wdata[cnt];       // mosi 依次产生串行 bit
+    end
+    @(posedge clk) begin        // 等到下一个时钟上升沿
+      sck <= 1’b1;              // sck 拉高
+      cnt = cnt - 1;            // cnt 每次循环都递减
+    end
+  end
+  @(posedge clk) mosi <= 1’b1;  // mosi 拉高
+  @(posedge clk) ss <= 1’b1;    // ss 拉高，发送结束
 end
 ```
 
@@ -274,14 +274,14 @@ endmodule
 ```bsv
 // 用 BSV 编译器把 BSV 模块转化为 Verilog 后的接口定义
 module mkSPIWriter(          // 这些注释是笔者加上的
-	input  CLK,              // 自动生成的时钟
-	input  RST_N,            // 自动生成的复位
+    input  CLK,              // 自动生成的时钟
+    input  RST_N,            // 自动生成的复位
     // 由 method Action write(Bit#(8) data) 生成的信号
     input  [7:0] write_data, // 对应波形图1中的 data 信号
-	input  EN_write,         // 对应波形图1中的 en 信号（是自动生成的握手信号）
-	output RDY_write,        // 对应波形图1中的 rdy 信号（是自动生成的握手信号）
+    input  EN_write,         // 对应波形图1中的 en 信号（是自动生成的握手信号）
+    output RDY_write,        // 对应波形图1中的 rdy 信号（是自动生成的握手信号）
     // 由 method Bit#(3) spi 生成的信号
-	output [2:0] spi,        // 3bit 分别对应 ss,sck,mosi 信号
+    output [2:0] spi,        // 3bit 分别对应 ss,sck,mosi 信号
 );
 ```
 
@@ -437,11 +437,11 @@ $ gtkwave wave.vcd     #今后用该命令查看波形文件 wave.vcd
 
 ### <span id="head16">在 Windows 上安装 gtkwave</span>
 
-你不能在 WSL 中安装 gtkwave，因为 gtkwave 是一个图形界面 (GUI)，而 WSL 是没有 GUI 的。替代办法就是直接在 Windows 上安装 gtkwave。请前往 [**gtkwave官网** ](http://gtkwave.sourceforge.net/)下载 ZIP 压缩包，把它解压到你想安装的文件夹下，找到其中的 `gtkwave/bin` 目录里面的 **gtkwave.exe** ，运行它，如果打开了一个窗口，则安装成功。
+你不能在 WSL 中安装 gtkwave，因为 gtkwave 是一个图形界面 (GUI)，而 WSL 是没有 GUI 的。替代办法就是直接在 Windows 上安装 gtkwave。请前往 [**gtkwave官网** ](http://gtkwave.sourceforge.net/)下载 ZIP 压缩包，把它解压到你想安装的目录下，找到其中的 `gtkwave/bin` 目录里面的 **gtkwave.exe** ，运行它，如果打开了一个窗口，则安装成功。
 
 
 
-## <span id="head17">3.4 部署脚本 bsvbuild.sh</span>
+## <span id="head17">3.4 部署 bsvbuild.sh 脚本</span>
 
 为了方便调用 bsc 和 iverilog 等工具进行编译、仿真、生成波形、生成 Verilog 的流程，我编写了自动脚本 **bsvbuild.sh** 。请运行以下命令把它复制到 `/opt/bsc/bin` 目录下（也就是3.1节中bsc的安装目录），并提供运行权限：
 
@@ -457,36 +457,11 @@ $ chmod +x /opt/bsc/bin/bsvbuild.sh
 $ bsvbuild.sh    # 如果打印如下，说明 bsvbuild.sh 正常工作
 
  usage: run following command under the directory which contains .bsv source file(s):
-         /opt/bsc/bin/bsvbuild.sh -<param> [<top_module>] [<top_file_name>]
-
- arguments:
-         -<param>:
-                 -bs    : run BSV simulation.
-                 -bw    : generate BSV simulation wave.
-                 -bsw   : run BSV simulation and generate wave.
-                 -v     : generate Verilog source only.
-                 -vs    : generate Verilog source and run Verilog simulation.
-                 -vw    : generate Verilog source and generate Verilog simulation wave.
-                 -vsw   : generate Verilog source, run Verilog simulation and generate wave.
-                 -clean : remove temporary files in current directory using:
-                                 rm *.bo *.ba *.cxx *.h *.o sim.out sim.out.so
-         <top_module>:
-                 The top level module name. optional, default is mkTb
-         <file_name>:
-                 The top level file name. optional, default is Tb.bsv
-
- example:
-         /opt/bsc/bin/bsvbuild.sh -vsw mkCounter Counter.bsv
-
- dependency:
-         1. bsc : BSV compiler
-         2. iverilog : Verilog simulator, only for Verilog simulation
-
- The meaning of printing colors:
-         1. error message
-         2. compilation commands and important notes
-         3. simulation print, e.g., from $display() in BSV
+         /opt/bsc/bin/bsvbuild.sh -<param> [<top_module>] [<top_file_name>] [<log_file_name>] [<sim_time>]
+省略更多打印 ...
 ```
+
+第4章会通过例子展示 **bsvbuild.sh** 的使用方法。
 
 
 
@@ -506,9 +481,49 @@ BSV 的代码文件名后缀为 .bsv ，尽管用记事本都能编写，但没�
 
 # <span id="head19">4 项目组织与构建</span>
 
-本章讲述 BSV 的项目组织结构；以及用命令行编译、仿真、生成波形、生成 Verilog 的方式。
+本章讲述 BSV 的项目组织结构；以及用命令行进行编译、仿真、生成波形、生成 Verilog 的方式。
 
-## <span id="head20">4.1 单模块项目</span>
+## <span id="head20s">4.1 bsvbuild.sh 脚本</span>
+
+**bsvbuild.sh** 的命令格式如下：
+
+```bash
+bsvbuild.sh -<param> [<top_module>] [<top_file_name>] [<log_file_name>] [<sim_time>]
+```
+
+其中：
+
+-  `<top_module>` 是仿真顶层模块名，如果省略，默认为 `mkTb`
+- `<top_file_name>` 是仿真顶层模块所在的文件名，如果省略，默认为 `Tb.bsv`
+- `<log_file_name>` 是仿真打印（如果有仿真打印的话）的输出文件名，如果省略，则默认打印到 stdout（屏幕）
+- `<sim_time>` 是 BSV 仿真的限制时间（单位：时钟周期），必须是一个正整数。如果省略，则为无穷（只在遇到 `$finish;` 时结束仿真）
+
+而 `<param>` 是一个重要的编译参数，其取值和含义如**表1**。
+
+​			**表1**：**bsvbuild.sh** 的编译参数 `<param>` 的取值及其含义。
+
+| \<param\> |   生成Verilog？    | 仿真方式 |     仿真打印？     | 生成仿真波形(.vcd)？ |
+| :-------: | :----------------: | :------: | :----------------: | :------------------: |
+|    -bs    |                    |   BSV    | :heavy_check_mark: |                      |
+|    -bw    |                    |   BSV    |                    |  :heavy_check_mark:  |
+|   -bsw    |                    |   BSV    | :heavy_check_mark: |  :heavy_check_mark:  |
+|    -v     | :heavy_check_mark: |    -     |                    |                      |
+|    -vs    | :heavy_check_mark: | Verilog  | :heavy_check_mark: |                      |
+|    -vw    | :heavy_check_mark: | Verilog  |                    |  :heavy_check_mark:  |
+|   -vsw    | :heavy_check_mark: | Verilog  | :heavy_check_mark: |  :heavy_check_mark:  |
+
+可以看到， BSV 代码可以进行两种仿真方式：
+
+* 直接用 BSV 仿真
+* 生成 Verilog 后再仿真
+
+这两种仿真方式的结果在正常情况下应该相同，这说明了 BSV 生成的 Verilog 正确性。据 BSV 官方说：BSV正确性是100%保证的，不会像 HLS 那样偶尔会出现 C 仿真与 C-Verilog co-simulation 结果不一致的情况。
+
+另外，据我测试，Verilog 仿真的编译速度略微快于 BSV ，但 BSV 仿真的运行速度远远快于 Verilog。
+
+
+
+## <span id="head20">4.2 单模块项目</span>
 
 BSV 项目是由**包** (package) 和**模块** (module) 来组织的。我们首先看看单包、单模块项目。打开 `src/1.Hello/Hello.bsv` 可以看到如下代码，它打印 `Hello World!` 后直接退出：
 
@@ -534,13 +549,16 @@ endpackage
 $ bsvbuild.sh -bs mkTb Hello.bsv
 ```
 
-命令含义是：以 `mkTb` 为顶层模块，以 `Hello.bsv` 为顶层文件进行仿真，`-bs` 参数代表进行 BSV 仿真，只打印，不生成仿真波形文件。
+该命令含义是：以 `mkTb` 为顶层模块，以 `Hello.bsv` 为顶层文件进行仿真，`-bs` 参数代表进行 BSV 仿真，只打印，不生成仿真波形文件。
 
-该命令会产生如下输出。可以看到 **bsvbuild.sh** 调用了一些编译链接命令，然后进行仿真并打印出了 `Hello World!` ，最后因为遇到 `$finish;`而结束。
+该命令会产生如下输出。可以看到 **bsvbuild.sh** 调用了一些编译链接命令，然后进行仿真并打印出了 `Hello World!` ，最后因为遇到 `$finish;` 而结束。
 
 ```bash
 top module: mkTb
 top file  : Hello.bsv
+print simulation log to: /dev/stdout
+
+maximum simulation time argument:
 
 bsc -sim -g mkTb -u Hello.bsv
 checking package dependencies
@@ -554,11 +572,9 @@ Bluesim object created: model_mkTb.{h,o}
 Simulation shared library created: sim.out.so
 Simulation executable created: sim.out
 
-./sim.out
+./sim.out > /dev/stdout
 Hello World!
 ```
-
->  :point_right: 任何 BSV 仿真顶层代码中都要有 `$finish;` ，否则会陷入死循环（按 Ctrl+C 可强制退出）。
 
 因为顶层模块名为默认名称 `mkTb` ，上述命令可以简化为：
 
@@ -567,32 +583,24 @@ Hello World!
 $ bsvbuild.sh -bs Hello.bsv
 ```
 
-以上命令的 `-bs` 是一个很重要的编译参数，有种七种选项，如**表1**。你可以都试试，看看效果如何。
+你可以把以上命令的 `-bs` 参数改成**表1**中的其它参数，看看效果如何。
 
-​			**表1**：**bsvbuild.sh** 的编译参数。
+### 仿真打印到文件
 
-| 编译参数 |   生成Verilog？    | 仿真方式 |     仿真打印？     | 生成仿真波形(.vcd)？ |
-| :------: | :----------------: | :------: | :----------------: | :------------------: |
-|   -bs    |                    |   BSV    | :heavy_check_mark: |                      |
-|   -bw    |                    |   BSV    |                    |  :heavy_check_mark:  |
-|   -bsw   |                    |   BSV    | :heavy_check_mark: |  :heavy_check_mark:  |
-|    -v    | :heavy_check_mark: |    -     |                    |                      |
-|   -vs    | :heavy_check_mark: | Verilog  | :heavy_check_mark: |                      |
-|   -vw    | :heavy_check_mark: | Verilog  |                    |  :heavy_check_mark:  |
-|   -vsw   | :heavy_check_mark: | Verilog  | :heavy_check_mark: |  :heavy_check_mark:  |
+上述仿真打印是显示在屏幕上的（也就是 `/dev/stdout` ），你也可以添加一个文件名作为参数，比如：
 
-可以看到， BSV 代码可以进行两种仿真方式：
+```bash
+# 在 src/1.Hello/ 目录下运行以下命令
+$ bsvbuild.sh -bs mkTb Hello.bsv display.txt
+```
 
-* 直接用 BSV 仿真
-* 生成 Verilog 后再仿真
+这样就会把 `Hello World!` 打印在一个新文件  `display.txt` 中（如果文件已存在，则覆盖），该文件名的后缀必须是 `.txt` 或 `.log` 。
 
-这两种仿真方式的结果在正常情况下应该相同，这说明了 BSV 生成的 Verilog 正确性。据 BSV 官方说：BSV正确性是100%保证的，不会像 HLS 那样偶尔会出现 C 仿真与 C-Verilog co-simulation 结果不一致的情况。
-
-另外，据我测试，Verilog 仿真的编译速度略微快于 BSV ，但 BSV 仿真的运行速度往往远远快于 Verilog。
+当你需要大量仿真打印时，可以像这样指定一个仿真打印文件，而不是打印在屏幕上。
 
 
 
-## <span id="head21">4.2 单包多模块项目</span>
+## <span id="head21">4.3 单包多模块项目</span>
 
 我们再看看如何组织单包、多模块项目。打开 `src/2.DecCounter/DecCounter.bsv` 。它的结构如下：
 
@@ -626,9 +634,56 @@ endmodule
 $ bsvbuild.sh -bs mkTb DecCounter.bsv
 ```
 
-该命令中只需指定顶层模块 `mkTb` ，无需指定子模块 `mkDecCounter` ，BSV 编译器会自动找到 `mkDecCounter` 。
+该命令中只需指定顶层模块 `mkTb` ，无需指定子模块 `mkDecCounter` ，因为 BSV 编译器会自动找到 `mkDecCounter` 。
 
-然后，我们来看看多模块生成的 Verilog 是什么样。注意到 `mkDecCounter` 的定义上有一个 `(* synthesis *)` 属性，它告诉编译器，该 BSV 模块需要可综合，且单独生成一个 Verilog 模块。除了顶层模块 `mkTb` 必然要生成一个 Verilog 模块外，每个添加了 `(* synthesis *)` 的 BSV 模块都会生成 1 个 Verilog 模块，而不添加 `(* synthesis *)`的 BSV 模块会嵌入它的上级（调用者）的 Verilog 代码体内。
+该命令打印如下：
+
+```
+省略前面的编译信息 ...
+./sim.out > /dev/stdout
+count= 0
+count= 1
+count= 2
+count= 3
+count= 4
+count= 5
+count= 6
+count= 7
+count= 8
+count= 9
+```
+
+### 限制仿真时间
+
+以上仿真是因为遇到了代码中的 `$finish;` 而停止的。你也可以在命令中添加一个正整数作为参数，来限制仿真时间，比如：
+
+```bash
+# 在 src/2.DecCounter/ 目录下运行以下命令
+$ bsvbuild.sh -bs mkTb DecCounter.bsv 4
+```
+
+这样，该仿真最多只会运行4个时钟周期，在第4周期时即使没遇到 `$finish;` 也会停止。因此我们会看到该命令只会打印前三行：
+
+```
+省略前面的编译信息 ...
+./sim.out -m 4 > /dev/stdout
+count= 0
+count= 1
+count= 2
+```
+
+另外注意，用参数限制仿真时间只对 BSV 仿真有用，对 Verilog 仿真则没用。比如如果你运行如下命令，仿真不会在第4周期时停止。
+
+```bash
+# 在 src/2.DecCounter/ 目录下运行以下命令
+$ bsvbuild.sh -vs mkTb DecCounter.bsv 4
+```
+
+>  :point_right: 任何 BSV 仿真顶层代码中最好都要有 `$finish;`  来在适当的时候结束仿真，否则可能陷入死循环（按 Ctrl+C 可强制退出）。
+
+### 生成 Verilog 代码
+
+我们来 BSV 生成的 Verilog 是什么样。注意到 `mkDecCounter` 的定义上有一个 `(* synthesis *)` 属性，它告诉编译器，该 BSV 模块需要可综合，且单独生成一个 Verilog 模块。除了顶层模块 `mkTb` 必然要生成一个 Verilog 模块外，每个添加了 `(* synthesis *)` 的 BSV 模块都会生成 1 个 Verilog 模块，而不添加 `(* synthesis *)`的 BSV 模块会嵌入它的上级（调用者）的 Verilog 代码体内。
 
 运行 Verilog 仿真命令：
 
@@ -637,7 +692,7 @@ $ bsvbuild.sh -bs mkTb DecCounter.bsv
 $ bsvbuild.sh -vs mkTb DecCounter.bsv
 ```
 
-产生了两个 Verilog 文件。
+除了打印仿真信息外，以上命令还产生了两个 Verilog 文件。
 
 - `mkDecCounter.v` ： 包含 Verilog 模块 `mkDecCounter` 。
 - `mkTb.v` ： 包含 Verilog 模块 `mkTb` 。是仿真的顶层，上述仿真结果就是运行该模块所产生的。
@@ -646,7 +701,7 @@ $ bsvbuild.sh -vs mkTb DecCounter.bsv
 
 
 
-## <span id="head22">4.3 多包项目</span>
+## <span id="head22">4.4 多包项目</span>
 
 我们再看看如何组织多包、多模块项目。打开目录 `src/3.SPIWriter/` ，目录下有两个 `.bsv` 文件，每个文件内都有一个包 (package)，其中 `SPIWriter.bsv` 就包含 2.1 节中所述的 SPI 发送控制器，而 `TbSPIWriter.bsv` 中的 `mkTb` 调用了 `mkSPIWriter` 进行仿真。与单包多模块项目不同的是，调用者 `mkTb` 与被调用者 `mkSPIWriter` 不在同一个包中，因此 `TbSPIWriter.bsv` 中用如下语句引入了被调用包：
 
@@ -665,9 +720,9 @@ $ bsvbuild.sh -bs mkTb TbSPIWriter.bsv
 
 
 
-## <span id="head23">4.4 生成与查看波形</span>
+## <span id="head23">4.5 生成与查看波形</span>
 
-在目录 `src/4.3.SPIWriter/` 下，运行以下命令生成 Verilog 仿真波形。
+在目录 `src/3.SPIWriter/` 下，运行以下命令生成 Verilog 仿真波形。
 
 ```bash
 # 在 src/3.SPIWriter/ 目录下运行以下命令
@@ -677,6 +732,8 @@ $ bsvbuild.sh -vw mkTb TbSPIWriter.bsv
 运行后，发现生成了两个 Verilog 模块：`mkTb.v` 和 `mkSPIWriter.v` ，以及一个仿真波形文件 `mkTb_vw.vcd `，该波形文件就是以 `mkTb.v` 为顶层文件仿真而生成的（仿真引擎是 iverilog）。
 
 因此，通过观察波形，我们可以理解 `mkTb.v` 如何通过各个输入输出信号与 `mkSPIWriter.v` 交互，进而理解 `mkSPIWriter.v` 的输入输出行为。将来我们要在 Verilog 项目中用到 SPI 发送器时，可以调用 `mkSPIWriter.v` 。
+
+### 用 gtkwave 打开波形
 
 为了查看波形，用 gtkwave 打开生成的波形文件 `mkTb_vw.vcd` 。如果你用是 Linux 实体机/虚拟机，运行命令：
 
@@ -690,6 +747,8 @@ $ gtkwave mkTb_vw.vcd     # 只有有 GUI 的 Linux 实体机/虚拟机 能运�
 |        ![图4](./readme_image/4.set_vcd_as_gtkwave.png)         |
 | :----------------------------------------------------------: |
 | **图4**：在 Windows 中，把 **gtkwave.exe** 设为 `.vcd` 文件的打开方式 |
+
+### gtkwave 的基本使用
 
 打开 **gtkwave** 后，按**图5**操作：
 
@@ -1950,7 +2009,7 @@ module mkTb ();
       w2 <= cnt;
    endrule
 
-   rule show;                   // 只能在 w1._read 和 w2._write 的周期激活
+   rule show;                   // 只能在 w1._read 和 w2._read 的周期激活
       $display("cnt=%1d   w1=%2d   w2=%2d", cnt, w1, w2);
    endrule
 endmodule
@@ -6309,8 +6368,8 @@ endseq
 // 设 regx 是寄存器
 seq
    action        // 这样是可以的：
-   	  int x=0; 
-   	  x = regx; 
+      int x=0; 
+      x = regx; 
       for(int y=0; y<4; y=y+1)
          x = x + y;
       regx <= x;
@@ -6508,20 +6567,20 @@ endinterface: FIFO
 //
 // ... 省略一部分
 module mkBitCoder(CLK,
-		  RST_N,
+          RST_N,
 
-		  enq_1,
-		  EN_enq,
-		  RDY_enq,
+          enq_1,
+          EN_enq,
+          RDY_enq,
 
-		  EN_deq,
-		  RDY_deq,
+          EN_deq,
+          RDY_deq,
 
-		  first,
-		  RDY_first,
+          first,
+          RDY_first,
 
-		  EN_clear,
-		  RDY_clear);
+          EN_clear,
+          RDY_clear);
   input  CLK;
   input  RST_N;
 
@@ -6697,14 +6756,14 @@ Verilog 代码库的路径包括：
 ```bsv
   // submodule fifo1
   FIFO2 #(.width(32'd8), .guarded(32'd1)) fifo1(.RST(RST_N),
-						.CLK(CLK),
+                        .CLK(CLK),
                         // 省略多行 ...
-						.EMPTY_N(fifo1$EMPTY_N));
+                        .EMPTY_N(fifo1$EMPTY_N));
   // submodule fifo3
   FIFO2 #(.width(32'd8), .guarded(32'd1)) fifo3(.RST(RST_N),
-						.CLK(CLK),
-						// 省略多行 ...
-						.EMPTY_N(fifo3$EMPTY_N));
+                        .CLK(CLK),
+                        // 省略多行 ...
+                        .EMPTY_N(fifo3$EMPTY_N));
 ```
 
 显然它调用了 FIFO2 这个模块。于是我们去 `<bsc安装目录>/bsc/lib/Verilog` 中找到了 `FIFO2.v` 文件，把它复制并添加到你的 FPGA 项目里即可。
@@ -6898,16 +6957,16 @@ Bit#(32) print_data_count     = 40;
 
 ​			**表25**：我们实现的 CPU 的测试程序
 
-| 程序说明 | filename_instruction 取值           | filename_data                | 测试成功的标志   |
-| -------- | ----------------------------------- | ---------------------------- | ---------------- |
-| 快速排序 | `"benchmark/qsort_instruction.txt"` | 随意 *****                   | 看排序结果 ***** |
-| 算术测试 | `"benchmark/testA_instruction.txt"` | 随意 *****                   | 最终 pc/4=2227   |
-| 访存测试 | `"benchmark/testB_instruction.txt"` | `"benchmark/testB_data.txt"` | 最终 pc/4=2719   |
-| 跳转测试 | `"benchmark/testC_instruction.txt"` | 随意 *****                   | 最终 pc/4=2906   |
+| 程序说明 | filename_instruction 取值           | filename_data                | 测试成功的标志      |
+| -------- | ----------------------------------- | ---------------------------- | ------------------- |
+| 快速排序 | `"benchmark/qsort_instruction.txt"` | 随意 **\***                  | 看排序结果 **\*\*** |
+| 算术测试 | `"benchmark/testA_instruction.txt"` | 随意 **\***                  | 最终 pc/4=2227      |
+| 访存测试 | `"benchmark/testB_instruction.txt"` | `"benchmark/testB_data.txt"` | 最终 pc/4=2719      |
+| 跳转测试 | `"benchmark/testC_instruction.txt"` | 随意 **\***                  | 最终 pc/4=2906      |
 
-> *****：随意代表可以随意设置，该程序不要求数据 RAM 中有初始值。
+> **\***：随意 代表可以随意设置，该程序不要求数据 RAM 中有初始值。
 >
-> *****：排序结果通过打印数据 RAM 中的前 38 个数据来查看，这 38 个数据应该是由小到大排列的。
+> **\*\***：排序结果通过打印数据 RAM 中的前 38 个数据来查看，如果这 38 个数据由小到大排列，说明 CPU 运行正确。
 
 按**表25**设置好你想在 CPU 上运行的程序，然后运行以下命令来仿真：
 
