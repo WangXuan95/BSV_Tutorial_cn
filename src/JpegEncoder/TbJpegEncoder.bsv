@@ -11,7 +11,7 @@ import JpegEncoder::*;
 
 
 module mkTb ();
-   PgmReader   pgm_reader  <- mkPgmReader("img/in003.pgm");
+   PgmReader   pgm_reader  <- mkPgmReader("img/in011.pgm");
    JpegEncoder jpg_encoder <- mkJpegEncoder;
 
    Reg#(File)  jpg_file    <- mkReg(InvalidFile);
@@ -32,10 +32,13 @@ module mkTb ();
          jpg_encoder.init( unpack(pack(width/8)[8:0]) , unpack(pack(height/8)[8:0]) );
       endaction
 
-      while(pgm_reader.not_finish) action
-         let pixels <- pgm_reader.get_pixels;
-         jpg_encoder.put(pixels);
-      endaction
+      while(pgm_reader.not_finish) seq
+         action
+            let pixels <- pgm_reader.get_pixels;
+            jpg_encoder.put(pixels);
+         endaction
+         //delay(1);
+      endseq
 
       delay(10000);
    endseq );

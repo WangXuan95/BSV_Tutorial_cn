@@ -5,23 +5,26 @@ package JpegEncoder;
 // standard BSV packages
 import Vector::*;
 import DReg::*;
-import BRAM::*;
+import StmtFSM::*;
 
 // user defined packages
+import MoreRegs::*;
 import DoubleBuffer::*;
 
 
 interface JpegEncoder;
    method Action init(UInt#(9) xtile, UInt#(9) ytile);
+   method Action waitTillDone;
    method Action put(Vector#(8, UInt#(8)) pixels);        // input a line of pixels (8 * UInt#(8))
    method Bit#(128) get;
 endinterface
 
 
 (* synthesize *)
-(* always_ready="init" *)
 module mkJpegEncoder (JpegEncoder);
    
+   Reg#(Bit#(32)) x_y_bytes  <- mkReg(0);
+
    Bit#(128) jpg_header [18] = {               // .jpg 图像头，除了图像高、宽根据不同图像而改变外，其余都是固定内容（对任何图像都一样）
       128'hffd8000000ffe000104a464946000101,
       128'h00000100010000ffdb00430010080808,
@@ -29,7 +32,7 @@ module mkJpegEncoder (JpegEncoder);
       128'h10101010101010101010101020202020,
       128'h20202020202020202020202040404040,
       128'h404040404040404040404040ffc0000b,
-      128'h080000000001011100ffc400ab000000,   // 图像高(16bit)、宽(16bit) 需要填在本行的 [119:88] 下标处，即 08 后面， 01011100 前面
+      {8'h08, x_y_bytes, 88'h01011100ffc400ab000000},   // 图像高(16bit)、宽(16bit) 填在此处
       128'h00000000000800000000000000000102,
       128'h03040506070010000000000000007f00,
       128'h0000000000000001020304050607f011,
@@ -90,85 +93,52 @@ module mkJpegEncoder (JpegEncoder);
       return (x<0) ? pack(v-1) : pack(v);
    endfunction
 
-   BRAM2Port#(Tuple3#(UInt#(1), UInt#(3), UInt#(9)), Vector#(8, UInt#(8))) linebuf <- mkBRAM2Server(defaultValue);     // line-buffer
+   ReorderDoubleBuffer#(3, 9, Vector#(8, UInt#(8)))   linebuf     <- mkReorderDoubleBuffer;
 
-   Reg#(UInt#(9))                                     xtile_max  <- mkReg(0);                                          // x方向（横向）的分块数，即横向像素数/8
-   Reg#(UInt#(22))                                    header_idx <- mkReg(0-2);
-   Reg#(UInt#(22))                                    line_idx   <- mkReg(0-2);
-   Reg#(Bit#(32))                                     x_y_bytes  <- mkReg(0);
-   
-   Reg#(UInt#(1))                                     in_db    <- mkReg(0);
-   Reg#(UInt#(3))                                     in_yline <- mkReg(0);
-   Reg#(UInt#(9))                                     in_xtile <- mkReg(0);
-
-   Reg#(UInt#(1))                                     bufout_db    <- mkReg(0);
-   Reg#(UInt#(9))                                     bufout_xtile <- mkReg(0);
-   Reg#(UInt#(3))                                     bufout_yline <- mkReg(0);
-
-   Vector#(8, Reg#(Int#(8)))                          norm_pixels <- replicateM( mkReg(0) );
-   Reg#(Bool)                                         norm_en     <- mkDReg(False);
+   Vector#(8, Reg#(Int#(8)))                          norm_pixels <- replicateM( mkValidReg );
 
    DoubleBuffer#( 8, Vector#(8, Int#(24)) )    dcta_double_buffer <- mkDoubleBuffer(8);
    DoubleBuffer#( 8, Vector#(8, Int#( 9)) )    dctb_double_buffer <- mkDoubleBuffer(8);
 
-   Vector#(8, Reg#(Int#(9)))                          zig_pixels <- replicateM( mkReg(0) );
-   Reg#(Bool)                                         zig_en     <- mkDReg(False);
-   Reg#(UInt#(3))                                     zig_sy     <- mkReg(0);
+   Vector#(8, Reg#(Int#(9)))                          zig_pixels  <- replicateM( mkReg(0) );
+   Reg#(UInt#(3))                                     zig_sy      <- mkValidReg;
 
    Reg#(Vector#(8,Int#(8)))                           qnt_pixels  <- mkReg( replicate(0) );
    Reg#(Int#(8))                                      qnt_prev_dc <- mkReg(0);
-   Reg#(Bool)                                         qnt_en      <- mkDReg(False);
-   Reg#(UInt#(3))                                     qnt_sy      <- mkReg(0);
+   Reg#(UInt#(3))                                     qnt_sy      <- mkValidReg;
 
    Reg#(UInt#(4))                                     c_prev_zcnt <- mkReg(0);
-   Vector#(8, Reg#(Bool))                             c_valid    <- replicateM( mkDReg(False) );
-   Vector#(8, Reg#(UInt#(4)))                         c_zcnt     <- replicateM( mkReg(0) );
-   Vector#(8, Reg#(UInt#(3)))                         c_len      <- replicateM( mkReg(0) );
-   Vector#(8, Reg#(Bit#(7)))                          c_code     <- replicateM( mkReg(0) );
-   Reg#(Bool)                                         c_en       <- mkDReg(False);
+   Vector#(8, Reg#(Bool))                             c_valid     <- replicateM( mkValidReg );
+   Vector#(8, Reg#(UInt#(4)))                         c_zcnt      <- replicateM( mkReg(0) );
+   Vector#(8, Reg#(UInt#(3)))                         c_len       <- replicateM( mkReg(0) );
+   Vector#(8, Reg#(Bit#(7)))                          c_code      <- replicateM( mkReg(0) );
 
-   Vector#(8, Reg#(UInt#(4)))                         pm_len  <- replicateM( mkDReg(0) );
-   Vector#(8, Reg#(Bit#(14)))                         pm_bits <- replicateM( mkDReg(0) );
-   Reg#(Bool)                                         pm_en   <- mkDReg(False);
+   Vector#(8, Reg#(UInt#(4)))                         pm_len      <- replicateM( mkDReg(0) );
+   Vector#(8, Reg#(Bit#(14)))                         pm_bits     <- replicateM( mkDReg(0) );
+   Reg#(Bool)                                         pm_en       <- mkDReg(False);
 
-   Reg#(UInt#(8))                                     lm_len  <- mkDReg(0);
-   Reg#(Bit#(120))                                    lm_bits <- mkDReg('0);
-   Reg#(Bool)                                         lm_en   <- mkDReg(False);
+   Reg#(UInt#(8))                                     lm_len      <- mkReg(0);
+   Reg#(Bit#(120))                                    lm_bits     <- mkValidReg;
 
    Reg#(UInt#(8))                                     st_rem_len  <- mkReg(0);
    Reg#(Bit#(128))                                    st_rem_bits <- mkReg(0);
-   Reg#(Bit#(128))                                    st_data     <- mkReg(0);
-   Reg#(Bool)                                         st_valid    <- mkDReg(False);
-   Reg#(Bool)                                         st_en       <- mkDReg(False);
 
-   Reg#(Bit#(128))                                    j_data      <- mkReg(0);
-   Reg#(Bool)                                         j_valid     <- mkDReg(False);
+   Reg#(Bit#(128))                                    j_data      <- mkValidReg;
 
-   // 2. request to read 8 pixels from line-buffer -----------------------------------------------------------------------------------------------------------------------
-   rule pop_linebuf (bufout_db != in_db);
-      linebuf.portB.request.put( BRAMRequest{write: False, responseOnWrite: False, address: tuple3(bufout_db, bufout_yline, bufout_xtile), datain: unpack('0) } );
-      bufout_yline <= bufout_yline + 1;
-      if(bufout_yline == 7) begin
-         bufout_xtile <= bufout_xtile >= xtile_max ? 0 : bufout_xtile + 1;
-         if(bufout_xtile == xtile_max) bufout_db <= ~bufout_db;
-      end
-   endrule
-
-   // 3. get pixels from BRAM response, and act pixel-=128 on each pixel --------------------------------------------------------------------------------
+   // 3. get pixels from linebuf, and act pixel-=128 on each pixel --------------------------------------------------------------------------------
    rule normalize;
-      let bufout_pixels <- linebuf.portB.response.get();
+      let bufout_pixels <- linebuf.get;
       for(int x=0; x<8; x=x+1)
          norm_pixels[x] <= unpack(pack(bufout_pixels[x] - 128));
-      norm_en <= True;
    endrule
 
    // 4. DCT-A transform 8 pixel wise -----------------------------------------------------------------------------------------------------------------------
-   rule dct_a_transform (norm_en);
+   rule dct_a_transform;
       Vector#(8, Int#(24)) dcta_line = replicate(0);
       for(int y=0; y<8; y=y+1)
          for(int x=0; x<8; x=x+1)
             dcta_line[y] = dcta_line[y] + extend(norm_pixels[x]) * dct_matrix[y][x];
-      dcta_double_buffer.put(False, dcta_line);
+      dcta_double_buffer.put(dcta_line);
    endrule
 
    // 5. DCT-B transform 8 pixel wise -----------------------------------------------------------------------------------------------------------------------
@@ -181,7 +151,7 @@ module mkJpegEncoder (JpegEncoder);
             acc = acc + dcta_tile[x][dctb_x] * dct_matrix[y][x];
          dctb_line[y] = truncate(acc>>15);
       end
-      dctb_double_buffer.put(False, dctb_line);
+      dctb_double_buffer.put(dctb_line);
    endrule
 
    // 6. zig-zag ordering ---------------------------------------------------------------------------------------------------------------------------------
@@ -189,12 +159,13 @@ module mkJpegEncoder (JpegEncoder);
       match {.zig_y, .dctb_tile} <- dctb_double_buffer.get;
       for(int x=0; x<8; x=x+1)
          zig_pixels[x] <= dctb_tile[ zig_map[zig_y][x][1] ][ zig_map[zig_y][x][0] ];
-      zig_en <= True;
       zig_sy <= truncate(zig_y);
    endrule
 
+   (* mutually_exclusive = "init, quantization" *)   // for qnt_prev_dc._write
+
    // 7. quantization and DC-to-AC (DC value at [0][0]) ----------------------------------------------------------------------------------------------
-   rule quantization (zig_en);
+   rule quantization;
       Vector#(8, Int#(8)) pixels;
       for(int x=0; x<8; x=x+1) begin
          UInt#(3) quant_level = zig_sy >> 1;
@@ -206,12 +177,11 @@ module mkJpegEncoder (JpegEncoder);
          pixels[0] = pixels[0] - qnt_prev_dc;
       end
       qnt_pixels <= pixels;
-      qnt_en <= True;
-      qnt_sy <= zig_sy;
+      qnt_sy     <= zig_sy;
    endrule
 
    // 8. bit coding & run-length coding ----------------------------------------------------------------------------------------------------------------
-   rule coding (qnt_en);
+   rule coding;
       Bool mask [8];
       for(int i=0; i<8; i=i+1)
          mask[i] = i==0 && qnt_sy==0 || qnt_pixels[i]!=0;
@@ -228,12 +198,10 @@ module mkJpegEncoder (JpegEncoder);
          c_len[i]  <= getLength(qnt_pixels[i]);
          c_code[i] <= getBits(qnt_pixels[i]);
       end
-
-      c_en <= True;
    endrule
    
    // 9. pixel-wise bit merge ----------------------------------------------------------------------------------------------------------------
-   rule pixel_wise_bit_merge (c_en);
+   rule pixel_wise_bit_merge;
       for(int i=0; i<8; i=i+1) begin
          if(c_valid[i]) begin
             Bit#(7) code = c_code[i] << (7 - c_len[i]);
@@ -252,71 +220,70 @@ module mkJpegEncoder (JpegEncoder);
          bits = bits | ( {106'b0, pm_bits[i]} << (105-len) );
          len = len + extend(pm_len[i]);
       end
-      lm_len <= len;
+      lm_len  <= len;
       lm_bits <= bits;
-      lm_en <= True;
    endrule
 
-   // 11. stream construction ----------------------------------------------------------------------------------------------------------------
-   rule stream_construct (lm_en);
-      let len = st_rem_len + lm_len;
-      let bits = {st_rem_bits, 120'b0} | ( {lm_bits, 128'b0} >> st_rem_len );
-      if(len >= 128) begin
-         st_data <= bits[247:120];
-         st_valid <= True;
-         len = len - 128;
-         bits = {bits[119:0], 128'b0};
-      end
-      st_rem_len <= len;
-      st_rem_bits <= bits[247:120];
-      st_en <= True;
-   endrule
 
-   (* preempts = "init, jpg_file_stream_construct" *)
-   // 12. jpg file stream construction ----------------------------------------------------------------------------------------------------------------
-   rule jpg_file_stream_construct;
-      if(header_idx < 18) begin
-         header_idx <= header_idx + 1;
-         let header = jpg_header[header_idx];
-         if(header_idx == 6) header[119:88] = x_y_bytes;
-         j_data <= header;
-         j_valid <= True;
-      end else if(line_idx == 0) begin
-         line_idx <= line_idx - 1;
-         j_data <= st_rem_bits;
-         j_valid <= True;
-      end else if(line_idx == 0 - 1) begin
-         line_idx <= line_idx - 1;
-         j_data <= jpg_footer;
-         j_valid <= True;
-      end else if(st_en) begin
-         line_idx <= line_idx - 1;
-         if(st_valid) begin
-            j_data <= st_data;
-            j_valid <= True;
-         end
-      end
-   endrule
+   Reg#(UInt#(5))                                     header_idx <- mkReg(0);
+   Reg#(UInt#(24))                                    inout_cnt  <- mkReg(0);
+   Reg#(UInt#(24))                                    input_idx  <- mkReg(0);
+   Reg#(UInt#(24))                                    output_idx <- mkReg(0);
+   Wire#(Vector#(8, UInt#(8)))                        put_pixel  <- mkWire;
 
-   // 0. initialize, should be called once before put a image -------------------------------------------------------------------------------------------
+   FSM fsm <- mkFSM( seq
+      st_rem_len  <= 0;
+      st_rem_bits <= 0;
+      for(header_idx<=0; header_idx<18; header_idx <= header_idx + 1)
+         j_data <= jpg_header[header_idx];
+      par
+         seq
+            input_idx <= inout_cnt;
+            while(input_idx > 0) action
+               input_idx <= input_idx - 1;
+               linebuf.put(put_pixel);
+            endaction
+            noAction;
+         endseq
+         seq
+            output_idx <= inout_cnt;
+            while(output_idx > 0) action
+               output_idx <= output_idx - 1;
+               let len  = st_rem_len + lm_len;
+               let bits = {st_rem_bits, 120'b0} | ( {lm_bits, 128'b0} >> st_rem_len );
+               if(len >= 128) begin
+                  j_data  <= bits[247:120];
+                  len  = len - 128;
+                  bits = {bits[119:0], 128'b0};
+               end
+               st_rem_len  <= len;
+               st_rem_bits <= bits[247:120];
+            endaction
+            noAction;
+         endseq
+      endpar
+      j_data <= st_rem_bits;
+      j_data <= jpg_footer;
+      noAction;
+   endseq );
+
+   // initialize, should be called once before input a image -------------------------------------------------------------------------------------------
    method Action init(UInt#(9) xtile, UInt#(9) ytile);
-      header_idx <= 0;
-      xtile_max <= xtile>0 ? xtile-1 : 0;
-      line_idx <= extend(xtile) * extend(ytile) << 3;
+      if(xtile == 0) xtile = 1;
+      if(ytile == 0) ytile = 1;
       x_y_bytes <= {4'h0, pack(ytile), 3'h0, 4'h0, pack(xtile), 3'h0};
+      inout_cnt <= extend(xtile) * extend(ytile) << 3;
+      linebuf.rewind(7, xtile-1, True, False, False);
+      fsm.start;
+      qnt_prev_dc <= 0;
    endmethod
 
-   // 1. put 8 pixels to line-buffer -----------------------------------------------------------------------------------------------------------------------
-   method Action put(Vector#(8, UInt#(8)) pixels);
-      linebuf.portA.request.put( BRAMRequest{write: True,   responseOnWrite: False, address: tuple3(in_db, in_yline, in_xtile), datain: pixels } );
-      in_xtile <= in_xtile >= xtile_max ? 0 : in_xtile + 1;
-      if(in_xtile == xtile_max) begin
-         in_yline <= in_yline + 1;
-         if(in_yline == 7) in_db <= ~in_db;
-      end
-   endmethod
+   method waitTillDone = fsm.waitTillDone;
 
-   method get if(j_valid) = j_data;
+   // put 8 pixels to line-buffer -----------------------------------------------------------------------------------------------------------------------
+   method put if(input_idx>0) = put_pixel._write;
+
+   method get = j_data;
 
 endmodule
 

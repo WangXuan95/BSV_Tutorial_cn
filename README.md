@@ -23,28 +23,27 @@ Verilog 的语法简单、特性少，却能全面且精准地描述数字电路
 
 ## BSV 效果如何？
 
-BSV 的优势包括但不限于：
+BSV的优势包括但不限于：
 
-- 输入输出信号封装为方法(method)、自动生成握手信号。
+- 输入输出信号封装为method方法、自动生成握手信号。
 - 可用复合数据类型来组织数据，提高代码可读性和可维护性。
-- 支持多态，获得尽可能多的代码复用。
 - 提供各种小型FIFO模块，在构成复杂的弹性流水线电路时，比Verilog更高效。
-- 可用顺序结构、瞬时结构、并行结构构成状态机，相比Verilog的手动维护状态转移，更加方便。
+- 可用顺序结构、瞬时结构、并行结构构成状态机，相比Verilog手动维护状态转移更加方便。
+- 支持多态，获得尽可能多的代码复用。
+- 在多态的加持下，BSV的模块库会比Verilog模块库的通用性更强，因此BSV具有大量的官方库或第三方库，来支持各种常见功能，例如定点数、浮点数、LSFR、CRC、AXI总线等
 
-根据个人的使用经验，笔者认为 BSV 适合编写模块 (IP核)。在使用时，要把 BSV 转换成 Verilog 代码然后嵌入到 FPGA 项目中。
+BSV生成的Verilog和手写Verilog相比，资源量和时钟频率不差多少。但 BSV 的代码量往往很低，并获得更高的可读性、可维护性。这里给出一些直观样例：
 
-BSV生成的Verilog和手写Verilog相比，资源量和时钟频率不差多少，但代码量会大大降低，并获得更高的可读性、可维护性。例如我在教程中展示的两个样例：
+- BSV 编写 RISC-V RV32I 流水线 CPU 只有200行（手写Verilog可能要600行），在 EP4CE115F29C8 FPGA 占 5kLE，时钟频率达到 77MHz 。
+- BSV 编写 JPEG 图像压缩器只有300行（手写Verilog可能要1000行），在 EP4CE115F29C8 FPGA 占 12kLE，时钟频率达到 43MHz，性能达到 344 M像素/秒 。
 
-- BSV 编写 RISC-V RV32I 流水线 CPU 只有200行（手写Verilog可能要600行），在 EP4CE115F29C8 FPGA 中占 5kLE，时钟频率达到 77MHz 。
-- BSV 编写 JPEG 图像压缩器只有300行（手写Verilog可能要1000行），在 EP4CE115F29C8 FPGA 中占 12kLE，时钟频率达到 43MHz，性能达到 344 M像素/秒 。
-
-另外，BSV不仅能编写设计代码，还可以编写 BSV testbench ，可以生成 Verilog testbench ，不需要开发者额外编写 Verilog testbench 。
+个人认为 BSV 非常适合编写模块 (IP核)。方法是：用BSV编写模块和testbench，在BSV阶段就做好验证，然后生成Verilog模块。另外你还能用BSV testbench来生成Verilog testbench，进行Verilog仿真。后续使用时，把 Verilog 模块嵌入到 FPGA 项目中即可。
 
 ## 关于本教程
 
 在开始前，读者要有如下基础：
 
-- 熟悉 Verilog/VHDL ，熟悉数字电路设计，比如状态机、流水线、握手信号、串并转换、单口RAM、双口RAM等知识。
+- 熟悉 Verilog （如果你只会 VHDL，可以先花数小时了解一下 Verilog 的语法）；熟悉数字电路设计，比如数据的位表示、状态机、流水线、握手信号、串并转换、单双口RAM等知识。
 - 起码要知道软件编程语言中的基本概念：数据类型、分支、循环、数组、函数。
 
 另外，如果有以下知识，学起来会更轻松：
@@ -4235,30 +4234,30 @@ BRAM 具有一个读数据和写响应的缓存队列（一般我们不用写响
 - 流式输入：按**行主序**的顺序写入数据，每次写入一个元素
 - 流式输出：按**列主序**的顺序把数据输出来，每次输出一个元素
 
-> 通常 FPGA 的 BRAM 总容量大于100KB，完全可以支持更大的矩阵的转置器，比如 64×64。写 8×8 只是为了打印结果好看。
-
 设计思路是：首先，使用容量为 2×8×8 的双口 BRAM 来构成双缓冲。它在逻辑上分为两块，每块为 8 行 8 列。双缓冲的思想是：读和写交替在两块上执行，写**块0**时的同时只能读**块1**，反之亦然。
 
-我们实例化 BRAM 如下。注意到地址类型被我故意设计为 `Tuple3#(bit, UInt#(3), UInt#(3))`  ，其中第一个元素 bit 作为块号，第二个元素 UInt#(3) 作为行号，第三个元素 UInt#(3) 作为列号。
+> 通常 FPGA 的 BRAM 总容量大于100KB，完全可以支持更大的矩阵的转置器，比如 64×64。而 8×8 的情况下没必要用 BRAM ，用寄存器会更节省资源，写 8×8 只是为了打印结果好看。
+
+我们实例化 BRAM 如下。注意到地址类型被我故意设计为 `Tuple3#(bit, UInt#(3), UInt#(3))`  ，这是被允许的，因为这个 Tuple3 的所有成员派生自 Bits 类型类，所以 Tuple3 也派生自 Bits 类型类。之所以如此设计，是因为我们可以把第一个元素 bit 作为块号，第二个元素 UInt#(3) 作为行号，第三个元素 UInt#(3) 作为列号。
 
 ```bsv
-// 代码路径：src/17.MatrixT/MatrixT.bsv （部分）
+// 代码路径：src/17.TransposeBuffer/TransposeBuffer.bsv （部分）
 BRAM2Port#( Tuple3#(bit, UInt#(3), UInt#(3)) , int ) ram <- mkBRAM2Server(defaultValue);
 ```
 
 然后，定义写指针和读指针：
 
 ```bsv
-// 代码路径：src/17.MatrixT/MatrixT.bsv （部分）
-   Reg#(Bit#(2))  wb <- mkReg(0);    // 写块号指针
-   Reg#(UInt#(3)) wi <- mkReg(0);    // 写行号
-   Reg#(UInt#(3)) wj <- mkReg(0);    // 写列号
-   Reg#(Bit#(2))  rb <- mkReg(0);    // 读块号指针
-   Reg#(UInt#(3)) ri <- mkReg(0);    // 读行号
-   Reg#(UInt#(3)) rj <- mkReg(0);    // 读列号
+// 代码路径：src/17.TransposeBuffer/TransposeBuffer.bsv （部分）
+   Reg#(Bit#(2))  wblock <- mkReg(0);    // 写块号
+   Reg#(UInt#(3)) wi     <- mkReg(0);    // 写行号
+   Reg#(UInt#(3)) wj     <- mkReg(0);    // 写列号
+   Reg#(Bit#(2))  rblock <- mkReg(0);    // 读块号
+   Reg#(UInt#(3)) ri     <- mkReg(0);    // 读行号
+   Reg#(UInt#(3)) rj     <- mkReg(0);    // 读列号
 ```
 
-注意写块号指针 wb 和读块号指针 rb 都是 2bit 的，这是一种判断双缓冲空或满的技巧。如**图11**展示了一个双缓冲在开始工作后的过程，浅色的块代表无数据（待写）的块；深色的块代表有数据（待读）的块。读写块号指针都是 2bit 的，每当读一个块后，读块号指针就增加1；每当写一个块后，写块号指针就增加1 。该指针的含义是：
+注意写块号指针 wblock 和读块号指针 rblock 都是 2bit 的，这是一种判断双缓冲空或满的技巧。如**图11**展示了一个双缓冲在开始工作后的过程，浅色的块代表无数据（待写）的块；深色的块代表有数据（待读）的块。读写块号指针都是 2bit 的，每当读一个块后，读块号指针就增加1；每当写一个块后，写块号指针就增加1 。该指针的含义是：
 
 - 低位：读指针的低位作为当前待读的块号；写指针的低位作为当前待写的块号。
 - 高位：当读写指针的低位相等时，高位用来区分当前是空还是满，高位相等为空，高位不等为满。
@@ -4269,35 +4268,35 @@ BRAM2Port#( Tuple3#(bit, UInt#(3), UInt#(3)) , int ) ram <- mkBRAM2Server(defaul
 | :--------------------------------------------------------: |
 | **图11**：一种使用 2bit 的读写块号指针来控制双缓冲的技巧。 |
 
-根据以上技巧，编写用 wb 和 rb 来判断空满的代码：
+根据以上技巧，编写用 wblock 和 rblock 来判断空满的代码：
 
 ```bsv
-// 代码路径：src/17.MatrixT/MatrixT.bsv （部分）
+// 代码路径：src/17.TransposeBuffer/TransposeBuffer.bsv （部分）
    Wire#(Bool) empty <- mkWire;
    Wire#(Bool) full  <- mkWire;
    rule empty_full;
-      empty <= wb == rb;                // True:空  False:不空
-      full  <= wb == {~rb[1], rb[0]};   // True:满  False:不满
+      empty <= wblock == rblock;
+      full  <= wblock == {~rblock[1], rblock[0]};
    endrule
 ```
 
 然后，编写写数据的行为代码，即从外界输入数据的方法：
 
-- 隐式条件：`!full` （不满）
+- 隐式条件：`!full` （不满） 且 `!rewind_call` （rewind方法不被调用。rewind方法用来重置双缓冲）
 - 行为：把数据写入 `{块号, 行号, 列号}` 所指向的 BRAM 位置，然后按行主序的方式移动指针
 
 ```bsv
-// 代码路径：src/17.MatrixT/MatrixT.bsv （部分）
-method Action datain(int val) if(!full);           // 外界调用该方法，输入待转置(行主序)的数据流
+// 代码路径：src/17.TransposeBuffer/TransposeBuffer.bsv （部分）
+method Action put(int val) if( !full && !rewind_call );     // 外界调用该方法，输入待转置(行主序)的数据流
    ram.portA.request.put(
       BRAMRequest{write: True, responseOnWrite: False, address: tuple3(wb[0], wi, wj), datain: val });
    
    // ------------ 按行主序的方式移动指针 ------------
-   wj <= wj + 1;         // 列号先增加
-   if(wj == 7) begin     // 列号到最大时
-      wi <= wi + 1       //   行号增加
-      if(wi == 7)        //   行号到最大时
-         wb <= wb + 1;   //     块号增加
+   wj <= wj + 1;                 // 列号先增加
+   if(wj == 7) begin             // 列号到最大时
+      wi <= wi + 1;              //   行号增加
+      if(wi == 7)                //   行号到最大时
+         wblock <= wblock + 1;   //     块号增加
    end
 endmethod
 ```
@@ -4308,15 +4307,14 @@ endmethod
 - 行为：读 `{块号, 行号, 列号}` 所指向的 BRAM 位置，然后按列主序的方式移动指针
 
 ```bsv
-// 代码路径：src/17.MatrixT/MatrixT.bsv （部分）
-rule read_ram (!empty);
-   ram.portB.request.put(
-       BRAMRequest{write: False, responseOnWrite: False, address: tuple3(rb[0], ri, rj), datain: 0});
-   ri <= ri + 1;
-   if(ri == 7) begin
-      rj <= rj + 1;
-      if(rj == 7)
-         rb <= rb + 1;
+// 代码路径：src/17.TransposeBuffer/TransposeBuffer.bsv （部分）
+rule read_ram ( !empty );
+   ram.portB.request.put(BRAMRequest{write: False, responseOnWrite: False, address: tuple3(rblock[0], ri, rj), datain: 0 } );
+   ri <= ri + 1;                 // 行号先增加
+   if(ri == 7) begin             // 行号到最大时
+      rj <= rj + 1;              //   列号增加
+      if(rj == 7)                //   列号到最大时
+         rblock <= rblock + 1;   //     块号增加
    end
 endrule
 ```
@@ -4324,11 +4322,8 @@ endrule
 然后，编写从 BRAM 读出数据的方法，作为矩阵转置器的输出数据的方法：
 
 ```bsv
-// 代码路径：src/17.MatrixT/MatrixT.bsv （部分）
-method ActionValue#(int) dataout;           // 外界调用该方法，获得转置后(列主序)的数据流
-   let val <- ram.portB.response.get;
-   return val;
-endmethod
+// 代码路径：src/17.TransposeBuffer/TransposeBuffer.bsv （部分）
+method get = ram.portB.response.get;
 ```
 
 最后，编写 testbench 并测试，过程省略，读者可以自行运行仿真。
@@ -5791,59 +5786,54 @@ Reg#(int) wire_reg <- mkWireReg(0);   // 实例化一个 mkWireReg ，他有一�
 
 ### <span id="head151">e.g. 自定义双缓冲模块</span>
 
-我们实现一个通用的、多态的双缓冲模块 `mkDoubleBuffer`  ，它能积攒 n 个数据再一并提交。要求如下：
+我们实现一个通用的、多态的双缓冲模块 `mkDoubleBuffer`  ，它能积攒 sz 个数据再一并提交。要求如下：
 
 - 数据元素类型是多态的（可以任意指定类型）。
-- 内部具有两块存储，构成双缓冲，每块存储 n 个数据元素。
+- 内部具有两块存储，构成双缓冲，每块存储 sz 个数据元素。
 - 读和写只能交替在两块上进行，读 block0 的同时只能写 block1 ，反之亦然。
-- 每次写一项数据元素，攒够 n 个数据元素后，转而去写另一个块（这称为“提交”）。
-- 允许撤销 (cancel) 当前正在写的块，丢弃之前已经写入的还未提交的数据，从零开始积攒 n 个数据。
-- 每次都读出整个块（即所有 n 个元素），相同的块一共要读 readTimes 次，然后转而去读另一个块。
+- 每次写一项数据元素，攒够 sz 个数据元素后，转而去写另一个块（这称为“提交”）。
+- 允许撤销 (cancel) 当前正在写的块，丢弃之前已经写入的还未提交的数据，从零开始积攒 sz 个数据。
+- 每次都读出整个块（即所有 sz 个元素），相同的块一共要读 rtime 次，然后转而去读另一个块。
 
-以下是实现：
+以下是实现。首先，规定模块的接口如下。注意其中定义了两个多态参数：
 
-首先，规定模块的接口如下。注意其中定义了两个多态参数：
-
-- `numeric type n` ， 数值类型 n 。
+- `numeric type sz` ， 数值类型 sz 。
 - `type td` ， 类型 td ：是每个数据元素的类型。
-
-```bsv
-//
-// 双缓冲接口 DoubleBuffer
-//
-// 多态参数: n : 数值类型，双缓冲中每块的元素数量
-//          td : 数据元素类型
-//
-// 方法 put : 
-//      参数 cancel : False:正常输入一项数据元素   True:撤销当前正在写的块，重新开始积攒n个元素
-//           indata : 一个输入数据元素
-//
-// 方法 get :
-//      效果        : 读一次数据，读出一整块（n个元素）
-//      返回值      : Tuple2(读计数，一整块数据) 
-//                       读计数: 当前一整块被读的次数，从0开始
-//                       一整块数据:  n个元素的Vector
-interface DoubleBuffer#(numeric type n, type td);
-   method Action put(Bool cancel, td indata);
-   method ActionValue#(Tuple2#(UInt#(32), Vector#(n, td))) get;
-endinterface
-```
-
-然后，实现模块 `mkDoubleBuffer` ，模块的定义如下。注意 readTimes 是模块的一个配置参数。
 
 ```bsv
 // 代码路径：src/23.DoubleBuffer/DoubleBuffer.bsv （部分）
 //
-// 双缓冲模块
-// 
-// 接口： DoubleBuffer#(n, td)
-//
-// 参数： readTimes : 读一个块的次数
-module mkDoubleBuffer#( UInt#(32) readTimes ) ( DoubleBuffer#(n, td) )
-   provisos( Bits#(td, sz) );         // 要求： td 派生自 Bits ，这样才能存起来
+// 接口: DoubleBuffer
+// 配置参数: sz : 双缓冲中每块的元素数量
+//          td : 数据元素类型
+// 方法 rewind : 重置，如果当前块被写入了一部分，就撤销当前正在写的块，重新开始积攒sz个元素
+// 方法 put : 输入一个数据元素
+//           indata : 一个输入数据元素
+// 方法 get : 读一次数据，读出一整块（sz个元素）
+//      返回值 : Tuple2(读计数，一整块数据) 
+//               读计数: 当前一整块被读的次数，从0开始
+//               一整块数据: sz个元素的Vector
+interface DoubleBuffer#(numeric type sz, type td);
+   method Action rewind;
+   method Action put(td indata);
+   method ActionValue#(Tuple2#(UInt#(32), Vector#(sz, td))) get;
+endinterface
 ```
 
-然后实现模块，首先在模块内定义两块缓冲区（本模块面向小型双缓冲，所以用寄存器向量作为缓冲区，不像 8.2 节的矩阵转置使用 BRAM 作为双缓冲）。
+然后，实现模块 `mkDoubleBuffer` ，模块的定义如下。注意 rtime 是模块的一个配置参数。
+
+```bsv
+// 代码路径：src/23.DoubleBuffer/DoubleBuffer.bsv （部分）
+//
+// 模块： mkDoubleBuffer
+// 功能： 双缓冲模块，每块 sz 个数据元素，每次输入一个元素，攒够一块后，每次读 sz 个元素，共读 rtime 次。用寄存器实现。
+// 接口： DoubleBuffer#(sz, td)
+// 参数： rtime : 读一个块的次数
+module mkDoubleBuffer#( UInt#(32) rtime ) ( DoubleBuffer#(sz, td) )
+   provisos( Bits#(td, td_sz) );
+```
+
+在模块内，首先定义两块缓冲区（本模块面向小型双缓冲，所以用寄存器向量作为缓冲区，不像 8.2 节的矩阵转置使用 BRAM 作为双缓冲）。
 
 ```bsv
 // 代码路径：src/23.DoubleBuffer/DoubleBuffer.bsv （部分）
@@ -5853,14 +5843,13 @@ module mkDoubleBuffer#( UInt#(32) readTimes ) ( DoubleBuffer#(n, td) )
    buffer[1] <- replicateM( mkRegU );        // 块1 实例化
 ```
 
-现在，需要确定下写指针的位宽，我们知道写指针的取值范围是 `0~n-1` ，所以应该用数值函数 `TLog#(n)` 作为写指针的位宽。
+现在，需要确定下写指针的位宽，我们知道写指针的取值范围是 `0~sz-1` ，所以应该用数值函数 `TLog#(sz)` 作为写指针的位宽。
 
-然后，定义一个常量 `wptrMax` ，作为写指针的最大值（写指针等于它时则归零）。方法是：先用 valueOf 伪函数把数值类型的 n 转化成 Integer 类型，减去1后，再用 fromInteger 函数把它转化成 `UInt#(TLog#(n))` 类型。
+然后，定义一个常量 `wptrMax` ，作为写指针的最大值（写指针等于它时则归零）。方法是：先用 valueOf 伪函数把数值类型的 sz 转化成 Integer 类型，减去1后，再用 fromInteger 函数把它转化成 `UInt#(TLog#(sz))` 类型。
 
 ```bsv
 // 代码路径：src/23.DoubleBuffer/DoubleBuffer.bsv （部分）
-   // 常量 ------------------------------------------------------------------------
-   UInt#(TLog#(n)) wptrMax = fromInteger(valueOf(n)-1);   // 写指针的最大值, 是运行时的常数
+   UInt#(TLog#(sz)) wptrMax = fromInteger(valueOf(sz)-1);   // 写指针的最大值, 是运行时的常数
 ```
 
 然后，定义写块号指针、写指针、读指针、读计数。它们都是寄存器：
@@ -5868,13 +5857,13 @@ module mkDoubleBuffer#( UInt#(32) readTimes ) ( DoubleBuffer#(n, td) )
 ```bsv
 // 代码路径：src/23.DoubleBuffer/DoubleBuffer.bsv （部分）
    // 双缓冲指针和计数 ------------------------------------------------------------------------
-   Reg#(Bit#(2))       wblock <- mkReg(0);   // 写块号指针 , 取值范围 'b00 ~ 'b11
-   Reg#(UInt#(TLog#(n))) wptr <- mkReg(0);   // 写指针     , 取值范围 0 ~ wptrMax ， 也即 0~n-1
-   Reg#(Bit#(2))       rblock <- mkReg(0);   // 读块号指针 , 取值范围 'b00 ~ 'b11
-   Reg#(UInt#(32))       rcnt <- mkReg(0);   // 读计数     , 取值范围 0 ~ readTimes-1
+   Reg#(Bit#(2))        wblock <- mkReg(0);   // 写块号指针 , 取值范围 'b00 ~ 'b11
+   Reg#(UInt#(TLog#(sz))) wptr <- mkReg(0);   // 写指针     , 取值范围 0 ~ wptrMax ， 也即 0~sz-1
+   Reg#(Bit#(2))        rblock <- mkReg(0);   // 读块号指针 , 取值范围 'b00 ~ 'b11
+   Reg#(UInt#(32))        rcnt <- mkReg(0);   // 读计数     , 取值范围 0 ~ rtime-1
 ```
 
-注意写块号指针 wblock 和读块号指针 rblock 都是 2bit 的，这是一种判断双缓冲空或满的技巧。如**图11**展示了一个双缓冲在开始工作后的过程，浅色的块代表无数据（待写）的块，深色的块代表有数据（待读）的块。读写指针都是 2bit 的，每当读一个块后 rblock 就+1；每当写一个块后 wblock 就+1 。它们中的高位和低位的含义是：
+注意写块号指针 wblock 和读块号指针 rblock 都是 2bit 的，这是 8.2 节讲过的判断双缓冲空或满的技巧：如**图11**展示了一个双缓冲在开始工作后的过程，浅色的块代表无数据（待写）的块，深色的块代表有数据（待读）的块。读写指针都是 2bit 的，每当读一个块后 rblock 就+1；每当写一个块后 wblock 就+1 。它们中的高位和低位的含义是：
 
 - 低位：rblock 的低位作为当前待读的块号；wblock 的低位作为当前待写的块号。
 - 高位：当 wblock 和 rblock 的低位相等时，高位用来区分当前是空还是满，高位相等为空，高位不等为满。
@@ -5900,37 +5889,30 @@ module mkDoubleBuffer#( UInt#(32) readTimes ) ( DoubleBuffer#(n, td) )
 
 然后，编写写数据的行为代码，也即 put 方法：
 
-- 隐式条件：`!full` （不满）
+- 隐式条件：`!full` （不满） 且 `!rewind_call` （rewind方法不被调用。rewind方法用来重置双缓冲）
 - 行为：把数据写入双缓冲，然后移动写指针，如果写指针=最大值，说明已经攒够了 n 个数据，就让写块号+1，即去写下一个块。
 
 ```bsv
 // 代码路径：src/23.DoubleBuffer/DoubleBuffer.bsv （部分）
    // 双缓冲输入方法 ------------------------------------------------------------------------
-   method Action put(Bool cancel, td indata) if( !full );
-      if(cancel) begin                              // 如果撤销
-         wptr <= 0;
-      end else begin                                // 如果正常输入数据
-         buffer[ wblock[0] ][ wptr ] <= indata;     //   写入缓冲区
-         wptr <= wptr >= wptrMax ? 0 : wptr + 1;    //   移动写指针
-         if(wptr >= wptrMax)                        //   如果写指针=最大值
-            wblock <= wblock + 1;                   //     写块号+1，即去写下一个块
-      end
+   method Action put(td indata) if( !full && !rewind_call );
+      buffer[ wblock[0] ][ wptr ] <= indata;        //   写入缓冲区
+      wptr <= wptr >= wptrMax ? 0 : wptr + 1;       //   移动写指针
+      if(wptr >= wptrMax) wblock <= wblock + 1;     //   如果写指针=最大值，则写块号+1，即去写下一个块 
    endmethod
 ```
 
 然后，编写读数据的行为代码，也即 get 方法：
 
 - 隐式条件：`!empty` （不空）
-- 行为：写计数 rcnt+1 ，如果 rcnt+1=readTimes，说明已经要读够 readTimes 次了，就让读块号+1，即去读下一个块。
+- 行为：写计数 `rcnt+1` ，如果 `rcnt+1==rtime`，说明已经要读够 rtime 次了，就让读块号+1，即去读下一个块。
 
 ```bsv
 // 代码路径：src/23.DoubleBuffer/DoubleBuffer.bsv （部分）
    // 双缓冲输出方法 ------------------------------------------------------------------------
-   method ActionValue#(Tuple2#(UInt#(32), Vector#(n, td))) get if( !empty );
-      rcnt <= rcnt+1>=readTimes ? 0 : rcnt + 1;     // 移动读计数
-      if( rcnt+1>=readTimes )                       // 如果读计数+1=读次数
-         rblock <= rblock + 1;                      //   读块号+1, 即去读下一块
-      
+   method ActionValue#(Tuple2#(UInt#(32), Vector#(sz, td))) get if( !empty );
+      rcnt <= rcnt+1>=rtime ? 0 : rcnt + 1;         // 移动读计数
+      if( rcnt+1>=rtime ) rblock <= rblock + 1;     // 如果读计数+1=读次数，则读块号+1, 即去读下一块
       return tuple2(                                // 构造 tuple2 作为返回值
          rcnt,                                      //   读计数
          regVector2Vector( buffer[ rblock[0] ] )    //   从缓冲区读取的块
@@ -5940,20 +5922,21 @@ module mkDoubleBuffer#( UInt#(32) readTimes ) ( DoubleBuffer#(n, td) )
    endmethod
 ```
 
-以上，模块 `mkDoubleBuffer` 就设计完了 。 
+以上，模块 `mkDoubleBuffer` 的主体就设计完了。 
 
 实例化 `mkDoubleBuffer` 的方法举例如下：
 
 ```bsv
 DoubleBuffer#(5, UInt#(16)) doublebuffer <- mkDoubleBuffer(3);
-    // n=5,  数据元素类型是UInt#(16),  readTimes=3
+    // sz=5,  数据元素类型是UInt#(16),  rtime=3
 ```
 
 最后，编写 testbench 如下：
 
 ```bsv
 // 代码路径：src/23.DoubleBuffer/DoubleBuffer.bsv （部分）
-module mkTb ();
+module mkTbDoubleBuffer ();
+
    // 时钟周期计数器 cnt ------------------------------------------------------------------------
    Reg#(int) cnt <- mkReg(0);
    rule up_counter;
@@ -5961,23 +5944,19 @@ module mkTb ();
       if(cnt > 1000) $finish;   // 仿真 1000 个周期
    endrule
 
-   // DoubleBuffer 实例 ------------------------------------------------------------------------
    DoubleBuffer#(5, UInt#(16)) doublebuffer <- mkDoubleBuffer(3);
 
    // 向 doublebuffer 中输入 ------------------------------------------------------------------------
    Reg#(UInt#(16)) indata <- mkReg(0);
-   rule double_buffer_put;// (cnt%9==0);    // 可以添加隐式条件，来模拟“有时候输入，有时候不输入”的情况，
-                                            // 发现不影响结果，只影响性能
+   rule double_buffer_put;// (cnt%7==0);    // 可以添加隐式条件，来模拟“有时候输入，有时候不输入”的情况，发现不影响结果，只影响性能
       if(indata < 48) begin
-         doublebuffer.put(False, indata);
+         doublebuffer.put(indata);
          indata <= indata + 1;
-      end else
-         doublebuffer.put(True, 0);
+      end
    endrule
 
    // 从 doublebuffer 中输出 ------------------------------------------------------------------------
-   rule double_buffer_get;// (cnt%5==0);    // 可以添加隐式条件，来模拟“有时候接受输出，有时候不接受输出”的情况，
-                                            // 发现不影响结果，只影响性能
+   rule double_buffer_get;// (cnt%5==0);    // 可以添加隐式条件，来模拟“有时候接受输出，有时候不接受输出”的情况，发现不影响结果，只影响性能
       match {.rcnt, .rdata} <- doublebuffer.get;    // rcnt 是 读计数， rdata 是读到的块
 
       // 打印一行 -------------------------------
@@ -5986,15 +5965,16 @@ module mkTb ();
          $write(" %2d", rdata[i]);
       $display("}");
    endrule
+
 endmodule
 ```
 
 该 testbench 的行为是：
 
-- 输入：调用 put 方法，依次把数据 0\~47 输入到双缓冲中，然后就不停地撤销。因为 n=5（每5项数据提交一次），由此分析只有 0\~44 被成功地提交了。
-- 输出：不断地试图调用 get 方法，每次得到5项数据后，就打印一行。因为 readTimes=3 ，所以每个相同的行重复打印三次。
+- 输入：调用 put 方法，依次把数据 0\~47 输入到双缓冲中。因为 sz=5（每5项数据提交一次），由此分析只有 0\~44 被成功地提交了。
+- 输出：不断地试图调用 get 方法，每次得到5项数据后，就打印一行。因为 rtime=3 ，所以每个相同的行重复打印三次。
 
-我们可以看到仿真打印符合以上分析：
+可以看到仿真打印符合以上分析：
 
 ```bsv
 cnt=[   5]   rcnt=[   0]   data={  0  1  2  3  4}
@@ -6013,6 +5993,8 @@ cnt=[  47]   rcnt=[   2]   data={ 40 41 42 43 44}
 ```
 
 在多态的加持下，该双缓冲模块通用性很强。第 13.3 节的 JPEG 图像压缩器就会用到它。
+
+另外， `src/23.DoubleBuffer/DoubleBuffer.bsv` 中还实现了另一种基于 BRAM 的多态双缓冲模块  `mkReorderDoubleBuffer` （矩阵重排序双缓冲），它是 8.2 节的矩阵转置双缓冲模块的通用化改进，不仅支持任意数据类型；支持可配置的行数和列数；还支持行主序、列主序、行逆序、列逆序。这里不再讲解其原理，读者可以自行阅读代码。
 
 
 
@@ -7024,21 +7006,24 @@ DataRAM[00000008] =       36611
 代码目录：  `src/JpegEncoder`
 
 - `JpegEncoder.bsv` 包含 JPEG 图像压缩器模块 `mkJpegEncoder` 。
-- `DoubleBuffer.bsv` 包含多态双缓冲模块 `mkDoubleBuffer` ，被 `mkJpegEncoder` 调用。
-- `TbJpegEncoder.bsv` 包含仿真顶层模块 `mkTb` ，是 `mkJpegEncoder`  的 testbench 。
-- `PgmReader.bsv` 包含用于读取 .pgm（未压缩灰度图文件）的模块，仅限于仿真使用，被 `mkTb` 调用。
+- `DoubleBuffer.bsv` 包含多态双缓冲模块 `mkDoubleBuffer` 和矩阵重排序双缓冲模块 `mkReorderDoubleBuffer` （详见 10.3 节），被 `mkJpegEncoder` 调用。
+- `MoreRegs.bsv` ，这里用到了 `ValidReg` （详见 10.3 节），被 `mkJpegEncoder` 调用。
+- `TbJpegEncoder.bsv` 包含仿真顶层模块 `mkTb` ，是 `mkJpegEncoder`  的 testbench 。只压缩一张图片。
+- `TbJpegEncoderMulti.bsv` 包含仿真顶层模块 `mkTb` ，是 `mkJpegEncoder`  的 testbench 。先后压缩 5 张图片。
+- `PgmReader.bsv` 包含用于读取 .pgm（未压缩灰度图文件）的模块，仅限于仿真使用，被 testbench 调用。
 - `img` 目录包含一些 .pgm 文件，用来在仿真时被送入 `mkJpegEncoder`  进行压缩。
-- `python/txt2jpg.py` 转换工具，用于把仿真生成的包含十六进制数的文本文件转化为二进制文件（.jpg图像是二进制文件）。
-- `python/jpeg_encoder.py` 是 JPEG 图像压缩器的软件代码实现，硬件模块  `mkJpegEncoder` 是根据它编写的。
+- `txt2jpg.py` 是一个转换工具（Python语言），用于把仿真生成的包含十六进制数的文本文件转化为二进制文件（也即 .jpg 图像文件）。
+- `jpeg_encoder.py` 是 JPEG 图像压缩器的软件代码实现（Python语言），硬件模块  `mkJpegEncoder` 是根据它编写的。
 
 目的：展示如何用 BSV 优雅地实现 JPEG 图像压缩器。
 
 核心知识点：
 
 - 双缓冲
-- 矩阵乘法
 - 多态的应用
 - Vector 的应用
+- 矩阵乘法
+- 状态机
 
 ### <span id="head191"> 原理介绍</span>
 
@@ -7052,7 +7037,7 @@ DataRAM[00000008] =       36611
 
 **仿真**：
 
-testbench 模块会读取并解析原始像素文件（不压缩的 `.pgm` 格式），把像素输入到 `mkJpegEncoder` 模块，再从中拿出压缩后的像素，以十六进制数的形式写入一个文本文件 `out.jpg.txt` 。
+`TbJpegEncoder.bsv` 中的 testbench 模块会读取并解析原始像素文件（未经压缩的 `.pgm` 格式），把像素输入到 `mkJpegEncoder` 模块，再从中拿出压缩后的像素，以十六进制数的形式写入一个文本文件 `out.jpg.txt` 。
 
 首先指定你想压缩的图像文件，比如是 `img/in003.pgm` ，方法是修改 `TbJpegEncoder.bsv`  中的如下一行：
 
@@ -7080,6 +7065,6 @@ $ python python/txt2jpg.py out.jpg.txt out.jpg
 
 **Verilog 综合结果**：
 
-生成的 `mkJpegEncoder.v` 在 Altera Cyclone IV EP4CE115F29C8 上占用 12533 LE (logic elements)，占总量的11%。时钟频率达到 43MHz 。
+生成的 `mkJpegEncoder.v` 在 Altera Cyclone IV EP4CE115F29C8 上占用 13133 LE (logic elements)，占总量的11%。时钟频率达到 43MHz 。
 
 考虑到每周期能并行输入 8 个像素，且由于双缓冲的实际而不存在停顿，吞吐率可达 344 M 像素/秒 。
