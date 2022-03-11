@@ -7027,7 +7027,7 @@ DataRAM[00000008] =       36611
 
 ### <span id="head191"> 原理介绍</span>
 
-该模块根据 JPEG 图像压缩算法的 python 代码 `src/JpegEncoder/python/jpeg_encoder.py` 编写。
+该模块根据 JPEG 图像压缩算法的 python 代码 `src/JpegEncoder/jpeg_encoder.py` 编写。
 
 能输入图像（8bit灰度图）的原始像素，输出 JPEG 压缩流（带有 `.jpg` 文件头尾）。
 
@@ -7056,7 +7056,7 @@ $ bsvbuild.sh -bs mkTb TbJpegEncoder.bsv
 然后，用以下命令调用我写的转换工具，把文本文件转化为二进制文件：
 
 ```bash
-$ python python/txt2jpg.py out.jpg.txt out.jpg
+$ python txt2jpg.py out.jpg.txt out.jpg
 ```
 
 得到的 `out.jpg` 可以用图像查看器直接打开查看。
