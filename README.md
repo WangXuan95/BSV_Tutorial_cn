@@ -832,8 +832,8 @@ BSV 中的类型必须派生 (deriving) 自零个、一个或多个**类型类**
 | `Eq`           | 派生出的类型的变量之间可以判断是否相等。                     |
 | `Ord`          | 派生出的类型的变量之间可以比较大小。                         |
 | `Arith`        | 派生出的类型的变量之间可以进行算术运算（加减乘除）。         |
-| `Literal`      | 派生出的类型的变量可以创建自从整数文字（例如123, 4567 这样）。 |
-| `RealLiteral`  | 派生出的类型的变量可以创建自从实数文字（例如12.3, 45.67 这样）。 |
+| `Literal`      | 派生出的类型的变量可以创建自从整数字面量（例如123, 4567 这样）。 |
+| `RealLiteral`  | 派生出的类型的变量可以创建自从实数字面量（例如12.3, 45.67 这样）。 |
 | `Bounded`      | 派生出的类型的变量具有有限范围。                             |
 | `Bitwise`      | 派生出的类型的变量之间可以进行按位运算（与、或、非等）。     |
 | `BitReduction` | 派生出的类型的变量可以进行逐位合并运算来产生1位的结果（类比Verilog中的 \|a 写法）。 |
@@ -4193,7 +4193,7 @@ BRAM2Port#(UInt#(12), int) ram2 <- mkBRAM2Server(
       loadFormat   : tagged Hex "data.txt",      // 使用包含十六进制数的文本文件 data.txt 设置初始值
       latency      : 2,                          // 读数据和写响应的延迟=2
       outFIFODepth : 4,                          // 读数据和写响应的缓存大小=4
-      allowWriteResponseBypass : False  }        // 不允许写响应绕过之前的读数据
+      allowWriteResponseBypass : False           // 不允许写响应绕过之前的读数据
    }
 );
 ```

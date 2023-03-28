@@ -7,6 +7,7 @@
 #     sh bsvbuild.sh
 #
 
+alias echo="echo -e"
 
 # colors for print text ------------------------------------------------------------------------------------------------------------------
 error_color="\033[1;31m"                     # echo this to change print text color for Error message. (31 is red)
