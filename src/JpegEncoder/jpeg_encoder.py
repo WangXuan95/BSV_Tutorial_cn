@@ -3,8 +3,9 @@
 #
 # 这是一个灰度图像的 JPEG 压缩算法。
 # 它不调用除了 numpy 以外的任何库，完整而简洁地展示了 JPEG 算法的原理。
+# 简单起见，本代码只支持长和宽为 8 的倍数的图象，尽管 JPEG 标准支持长和宽不为 8 的倍数的图象。
 #
-# 另外为了进行测试，它还调用了 PIL.Image 库用来读取待压缩的原始文件，但在JPEG 压缩算法中没用 PIL.Image 库。
+# 另外为了进行测试，它还调用了 PIL.Image 库用来读取待压缩的原始文件，但在JPEG 压缩算法中完全不使用 PIL.Image 库。
 #
 # 你可以用它来进行图像图像压缩，比如，运行以下命令可以把 image.pgm (原始像素文件) 压缩成 image.jpg (JPEG压缩文件) 。
 #     python JpegEncoder.py image.pgm image.jpg
@@ -15,6 +16,7 @@
 import sys
 import numpy as np
 from PIL.Image import open as imgopen
+
 
 class BitstreamWriter():
     def __init__(self):
@@ -44,6 +46,7 @@ class BitstreamWriter():
     def get(self):
         return self.stream
 
+
 dct_mat = np.matrix( [
             [ 32, 32, 32, 32, 32, 32, 32, 32],
             [ 44, 38, 25,  9, -9,-25,-38,-44],
@@ -64,6 +67,7 @@ zig_idxs = np.array( [
             [21,34,37,47,50,56,59,61],
             [35,36,48,49,57,58,62,63]  ], dtype = np.int32 )
 
+
 def shift_round_clip(x):
     y = np.int8(x>>16)
     if x>>15 & 0x1:
@@ -73,6 +77,7 @@ def shift_round_clip(x):
     elif y<-63:
         y = -63
     return y
+
 
 def dct_quant_zig(tile):  # input tile must be (8*8)
     tile = np.matrix(tile, dtype=np.int32)
@@ -85,6 +90,7 @@ def dct_quant_zig(tile):  # input tile must be (8*8)
             zig_vect[pos] = shift_round_clip( dct_tile[i,j] >> quant_level )
     return zig_vect
 
+
 def get_code(val):
     absval = val if val>=0 else -val
     length = 0
@@ -93,6 +99,7 @@ def get_code(val):
         length += 1
     code = val if val>=0 else (val-1)
     return length, code
+
 
 def bit_encoding(stream_writer, zig_vect):
     zero_cnt = 0
@@ -106,6 +113,7 @@ def bit_encoding(stream_writer, zig_vect):
             zero_cnt = 0
         elif ii==63:
             stream_writer.writebits( 0x0f, 8 )
+
 
 def jpeg_encoding(img_map):   # img_map must be a 2-dim numpy array, and has a height and width which can divide 8
     h, w = img_map.shape
